@@ -1,0 +1,39 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js",
+    "test": "jest --forceExit",
+    "lint": "eslint src/**/*.js",
+    "lint:audit": "npm audit --audit-level=high",
+    "lint:nodbg": "node -e \"const fs=require('fs'),path=require('path'),g=(d)=>{for(const f of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,f.name);if(f.isDirectory()&&!f.name.includes('__tests__')&&f.name!=='node_modules')g(p);else if(f.isFile()&&f.name.endsWith('.js')&&!f.name.includes('test')){const c=fs.readFileSync(p,'utf8');if(/console\\.log\\(/.test(c)){process.stderr.write('console.log found in '+p+'\\n');process.exit(1);}}}};g('./src');console.log('No console.log found in production code.');\""
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.22.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
+  }
+}
