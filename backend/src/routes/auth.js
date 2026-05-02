@@ -1,0 +1,20 @@
+const express   = require('express');
+const rateLimit = require('express-rate-limit');
+const { register, login } = require('../controllers/authController');
+
+const router = express.Router();
+
+// Protection contre les attaques brute-force sur les mots de passe
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: { status: 'error', message: 'Too many login attempts, please try again later.' },
+});
+
+// POST /api/auth/register
+router.post('/register', register);
+
+// POST /api/auth/login
+router.post('/login', loginLimiter, login);
+
+module.exports = router;
