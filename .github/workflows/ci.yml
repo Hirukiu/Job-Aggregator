@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend – Build / Lint / Tests
+    runs-on: self-hosted
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Build checks (3) ────────────────────────────────────────────────────
+
+      - name: "Build check 1 – Vérification de la syntaxe JS"
+        run: node --check src/app.js && node --check src/routes/auth.js && node --check src/controllers/authController.js && node --check src/utils/normalize.js
+
+      - name: "Build check 2 – L'app Express charge sans erreur"
+        run: node -e "require('./src/app')"
+        env:
+          JWT_SECRET: ci_secret
+
+      - name: "Build check 3 – Vérification des dépendances (npm ci propre)"
+        run: node -e "const pkg=require('./package.json');const required=['express','helmet','cors','bcryptjs','jsonwebtoken','mysql2'];const missing=required.filter(d=>!pkg.dependencies[d]);if(missing.length){console.error('Dépendances manquantes:',missing);process.exit(1);}console.log('Toutes les dépendances requises sont présentes.');"
+
+      # ── Lint / qualité (3) ──────────────────────────────────────────────────
+
+      - name: "Lint 1 – ESLint"
+        run: npm run lint
+
+      - name: "Lint 2 – Pas de console.log en production"
+        run: npm run lint:nodbg
+
+      - name: "Lint 3 – Audit de sécurité des dépendances"
+        run: npm run lint:audit
+
+      # ── Tests automatisés ───────────────────────────────────────────────────
+
+      - name: Tests
+        run: npm test
+        env:
+          JWT_SECRET: ci_secret
