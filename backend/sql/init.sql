@@ -21,9 +21,17 @@ CREATE TABLE IF NOT EXISTS offers (
   location      VARCHAR(255) NOT NULL,
   contract_type ENUM('CDI', 'CDD', 'INTERNSHIP', 'APPRENTICESHIP', 'FREELANCE', 'OTHER') NOT NULL,
   salary        VARCHAR(100),
+  remote        TINYINT(1)   NOT NULL DEFAULT 0,
   apply_url     VARCHAR(500),
+  raw_payload   JSON,
   is_active     TINYINT(1)   NOT NULL DEFAULT 1,
   published_at  DATETIME     NOT NULL,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 );
+
+CREATE INDEX idx_offers_source ON offers (source);
+CREATE INDEX idx_offers_location ON offers (location);
+CREATE INDEX idx_offers_contract_type ON offers (contract_type);
+CREATE INDEX idx_offers_published_at ON offers (published_at);
