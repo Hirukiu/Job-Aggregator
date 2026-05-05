@@ -1,8 +1,10 @@
-// Middleware de gestion centralisée des erreurs.
+// Central error handler for the backend.
+// Express needs 4 parameters to detect this as an error middleware.
 
 function errorHandler(err, req, res, next) {
+  void next;
 
-  // Erreur token invalide ou expiré : 401 Unauthorized
+  // Invalid or expired JWT token: 401 Unauthorized.
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     return res.status(401).json({
       status: 'error',
@@ -10,7 +12,7 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Erreur avec un statusCode
+  // Known error with a custom HTTP status code.
   
   if (err.statusCode) {
     return res.status(err.statusCode).json({
@@ -19,7 +21,7 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Erreur interne inattendue on renvoie un 500
+  // Unknown error: we log it and return a generic 500 response.
   console.error(err);
   return res.status(500).json({
     status: 'error',

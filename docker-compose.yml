@@ -1,0 +1,20 @@
+services:
+  database:
+    image: mysql:8.4
+    container_name: jobaggregator-mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: job_aggregator
+    ports:
+      - "3306:3306"
+    volumes:
+      - jobaggregator-db-data:/var/lib/mysql
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro,Z
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  jobaggregator-db-data:
