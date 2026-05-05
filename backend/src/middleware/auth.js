@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 
 // Middleware d'authentification JWT.
-// À placer sur toutes les routes qui nécessitent d'être connecté.
 
 
 function authenticate(req, res, next) {
@@ -10,7 +9,7 @@ function authenticate(req, res, next) {
   
   const authHeader = req.headers.authorization;
 
-  // Si le header est absent ou invalide : 401 Unauthorized
+  // verifie si le header est absent ou invalide
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       status: 'error',
@@ -22,16 +21,14 @@ function authenticate(req, res, next) {
   const token = authHeader.split(' ')[1];
 
   try {
-    // vérifie le token avec la clé dans .env
-    // Si le token est valide, récupere les données qu'on avait mis dedans
+    // récupere les données qu'on avait mis dans le token si il est valide
     const payload = jwt.verify(token, process.env.JWT_SECRET);
 
     // On ajoute les infos du token à la requête
-    
+  
     req.user = payload;
     next();
   } catch (err) {
-    // Token invalide ou expiré : géré par errorHandler (renvoie 401)
     next(err);
   }
 }

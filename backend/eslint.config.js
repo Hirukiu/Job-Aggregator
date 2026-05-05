@@ -11,7 +11,7 @@ module.exports = [
   {
     ignores: ['node_modules/**'],
     languageOptions: {
-      ecmaVersion: 2022,      // syntaxe JS moderne (async/await, etc.)
+      ecmaVersion: 2022,      // syntaxe JS moderne
       sourceType: 'commonjs', // on utilise require/module.exports
       globals: globals.node,
     },
