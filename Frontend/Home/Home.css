@@ -1,0 +1,60 @@
+body{
+    background-color: rgba(80, 210, 104, 0.616);
+    padding: 0;
+    margin: 0;
+}
+header{
+    background-color: rgb(17, 87, 17);
+    height: 75px;
+    position: fixed;
+    width: 100%;
+    display: flex;
+}
+.sidebar{
+    text-decoration: none;
+    color: white;
+    display: none;
+}
+main{
+    padding-top: 75px;
+}
+p{
+    margin-top: 0;
+}
+.logo{
+    height: 75px;
+    width: 75px;
+    margin-left: 10px;
+    margin-right: 190px;
+}
+header a svg{
+    color: greenyellow;
+    padding-top: 25px;
+    padding-right: 10px;
+}
+.toggle-sidebar{
+    background: none;
+    border: none;
+}
+.toggle-sidebar svg{
+    height: 75px;
+    width: 40px;
+}
+.scroll-container{
+    display: flex;
+    overflow: auto;
+    gap: 15px;
+    padding: 10px;
+    border: rgb(80, 210, 104) 1px solid;
+    border-radius: 5px;
+}
+.scroll-container::-webkit-scrollbar{
+    display: none;
+}
+.card{
+    flex: 0 0 80%;
+    background: rgba(0,0,0,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    scroll-snap-align: center;
+}
