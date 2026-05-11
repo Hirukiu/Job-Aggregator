@@ -8,9 +8,9 @@ function normalizeJob(raw) {
 
   // Each field is cleaned or replaced by a safe default value.
   return {
-    title: raw.title || '',
-    company: raw.company || '',
-    location: raw.location || '',
+    title:    typeof raw.title    === 'string' ? raw.title.trim()    : '',
+    company:  typeof raw.company  === 'string' ? raw.company.trim()  : '',
+    location: typeof raw.location === 'string' ? raw.location.trim() : '',
     salary: raw.salary || null,
     remote: raw.remote === true,
     url: raw.url || null,
