@@ -30,6 +30,7 @@ app.get('/ping', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/offers', require('./routes/offers'));
 app.use('/api/ingestion', require('./routes/ingestion'));
+app.use('/api/admin', require('./routes/admin'));
 
 app.use(errorHandler);
 

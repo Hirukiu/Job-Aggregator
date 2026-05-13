@@ -1,4 +1,5 @@
 services:
+
   database:
     image: mysql:8.4
     container_name: jobaggregator-mysql
@@ -15,6 +16,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+
+  backend:
+    build: ./backend
+    container_name: jobaggregator-backend
+    env_file: ./backend/.env
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306
+    ports:
+      - "4000:4000"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build: ./Frontend
+    container_name: jobaggregator-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   jobaggregator-db-data:

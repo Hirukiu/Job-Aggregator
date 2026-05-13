@@ -73,4 +73,27 @@ async function listOffers(req, res, next) {
   }
 }
 
-module.exports = { listOffers };
+// GET /api/offers/:id — retourne le détail d'une offre
+async function getOffer(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await pool.query(
+      `SELECT id, external_id, source, title, description, company, location,
+              contract_type, salary, remote, apply_url, published_at
+       FROM offers
+       WHERE id = ? AND is_active = 1`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ status: 'error', message: 'Offer not found.' });
+    }
+
+    return res.json({ status: 'success', data: rows[0] });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { listOffers, getOffer };
