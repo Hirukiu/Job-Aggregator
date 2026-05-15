@@ -110,8 +110,11 @@ Code    Cas
 
 ## POST /api/ingestion/welovedevs
 
-Importe des offres depuis l'API WeLoveDevs.
+Importe des offres depuis l'API WeLoveDevs. Requiert un token JWT avec rôle ADMIN.
 ```
+Header requis :
+  Authorization: Bearer <token>
+
 Body JSON (optionnel) :
 {
   "page": 0,
@@ -132,12 +135,58 @@ Code    Cas
             "size": 20
           }
         }
+401     Token manquant ou invalide
+        { "status": "error", "message": "Missing or invalid authorization header." }
+403     Rôle insuffisant
+        { "status": "error", "message": "Forbidden: insufficient permissions." }
+429     Too Many Requests
+        { "status": "error", "message": "Too many requests." }
 500     WELOVEDEVS_API_KEY manquante
         { "status": "error", "message": "Missing WELOVEDEVS_API_KEY." }
 502     Erreur de l'API WeLoveDevs
         { "status": "error", "message": "WeLoveDevs API error." }
-429     Too Many Requests
-        { "status": "error", "message": "Too many requests." }
+```
+
+---
+
+## GET /api/analytics
+
+Retourne des statistiques agrégées sur les offres actives. Route publique.
+```
+Réponses :
+Code    Cas
+200     Statistiques calculées
+        {
+          "status": "success",
+          "data": {
+            "totalOffers": 142,
+            "byCategory": [
+              { "category": "Backend", "count": 45 },
+              { "category": "Frontend", "count": 30 }
+            ],
+            "byContractType": [
+              { "contract_type": "CDI", "count": 80 },
+              { "contract_type": "INTERNSHIP", "count": 25 }
+            ],
+            "topCompanies": [
+              { "company": "Acme", "count": 8 }
+            ],
+            "topLocations": [
+              { "location": "Paris", "count": 50 }
+            ],
+            "remoteRatio": {
+              "remote": 60,
+              "onsite": 82,
+              "total": 142
+            },
+            "byMonth": [
+              { "month": "2026-01", "count": 20 },
+              { "month": "2026-02", "count": 35 }
+            ]
+          }
+        }
+500     Erreur serveur
+        { "status": "error", "message": "Internal server error." }
 ```
 
 ---
