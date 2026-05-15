@@ -11,7 +11,7 @@ async function listOffers(req, res, next) {
     const params = [];
 
     // Read filters from the URL query string.
-    const { q, location, contract_type: contractType, source } = req.query;
+    const { q, location, contract_type: contractType, source, category } = req.query;
 
     // We keep a safe limit, so one request cannot return too many rows.
     const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
@@ -48,13 +48,19 @@ async function listOffers(req, res, next) {
       params.push(String(source).trim());
     }
 
+    if (category && String(category).trim()) {
+      // Filter by AI-assigned category (e.g. "Frontend", "Data & AI").
+      filters.push('category = ?');
+      params.push(String(category).trim());
+    }
+
     // Join all filters into one WHERE clause.
     const where = `WHERE ${filters.join(' AND ')}`;
 
     // Parameters are passed separately to protect against SQL injection.
     const [rows] = await pool.query(
       `SELECT id, external_id, source, title, description, company, location,
-              contract_type, salary, remote, apply_url, published_at
+              contract_type, salary, remote, apply_url, category, published_at
        FROM offers
        ${where}
        ORDER BY published_at DESC
@@ -80,7 +86,7 @@ async function getOffer(req, res, next) {
 
     const [rows] = await pool.query(
       `SELECT id, external_id, source, title, description, company, location,
-              contract_type, salary, remote, apply_url, published_at
+              contract_type, salary, remote, apply_url, category, published_at
        FROM offers
        WHERE id = ? AND is_active = 1`,
       [id]

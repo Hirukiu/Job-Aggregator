@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS offers (
   salary VARCHAR(100),
   remote TINYINT(1) NOT NULL DEFAULT 0,
   apply_url VARCHAR(500),
+  raw_payload LONGTEXT,
+  category VARCHAR(50) NOT NULL DEFAULT 'Autre',
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   published_at DATETIME NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
