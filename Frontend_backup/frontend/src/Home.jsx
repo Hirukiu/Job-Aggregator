@@ -15,7 +15,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Section Hero (Recherche) */}
+      {/* Section Recherche */}
       <main className="max-w-4xl mx-auto pt-20 px-4 text-center">
         <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
           Trouvez votre prochain <span className="text-green-600">Job Tech</span>
@@ -62,9 +62,9 @@ export default function Home() {
           </select>
         </div>
 
-        {/* Liens de développement (à retirer en production) */}
+        {/* Liens de développement  */}
         <div className="mt-16 p-4 bg-green-50 rounded-2xl border border-green-100 inline-block text-sm">
-          <p className="text-green-800 font-bold mb-2">🛠️ Menu de Test Rapide :</p>
+          <p className="text-green-800 font-bold mb-2">Menu :</p>
           <div className="space-x-4">
             <Link to="/admin" className="text-green-700 underline">Espace Admin</Link>
           </div>
