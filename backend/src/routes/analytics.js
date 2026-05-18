@@ -3,7 +3,7 @@ const { getAnalytics } = require('../controllers/analyticsController');
 
 const router = express.Router();
 
-// Public route — aggregate data only, no personal information exposed.
+// Public route
 router.get('/', getAnalytics);
 
 module.exports = router;

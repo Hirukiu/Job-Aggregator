@@ -1,9 +1,4 @@
-// AI Feature: job offer domain classification.
-// Assigns one category to each offer based on title + description keywords.
-// No external model — dictionary-based, runs in-process, < 1ms per offer.
 
-// Each category has a list of keywords and a priority (higher = checked first).
-// Priority matters when an offer matches multiple categories.
 const CATEGORIES = [
   {
     name: 'Data & AI',
@@ -96,14 +91,15 @@ const CATEGORIES = [
   },
 ];
 
-// Sort categories by priority descending once at module load.
+// trier les categories par leurs priorité
+
 const SORTED_CATEGORIES = [...CATEGORIES].sort((a, b) => b.priority - a.priority);
 
 /**
  * Classify a job offer into a domain category.
  * @param {string} title       - Offer title
  * @param {string} description - Offer description
- * @returns {string} Category name (e.g. "Frontend", "Data & AI", "Autre")
+ * @returns {string} Category name 
  */
 function classifyOffer(title = '', description = '') {
   // Title is weighted more heavily by repeating it.

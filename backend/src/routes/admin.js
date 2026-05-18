@@ -7,15 +7,15 @@ const {
 
 const router = express.Router();
 
-// Toutes les routes admin nécessitent un JWT valide + le rôle ADMIN
+// routes admin
 router.use(authenticate, requireRole('ADMIN'));
 
-// Gestion des utilisateurs
+// routes utilisateurs
 router.get('/users', listUsers);
 router.patch('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 
-// Modération des offres 
+// routes des offres 
 router.get('/offers', listAllOffers);
 router.patch('/offers/:id/status', updateOfferStatus);
 router.delete('/offers/:id', deleteOffer);

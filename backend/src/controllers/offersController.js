@@ -49,7 +49,7 @@ async function listOffers(req, res, next) {
     }
 
     if (category && String(category).trim()) {
-      // Filter by AI-assigned category (e.g. "Frontend", "Data & AI").
+      // Filter by AI-assigned category 
       filters.push('category = ?');
       params.push(String(category).trim());
     }

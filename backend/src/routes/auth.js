@@ -4,9 +4,9 @@ const { register, login } = require('../controllers/authController');
 
 const router = express.Router();
 
-// Protection contre les attaques brute-force sur les mots de passe
+// limmiter le nb de connection 
 const loginLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000,
   max: 5,
   message: { status: 'error', message: 'Too many login attempts, please try again later.' },
 });
