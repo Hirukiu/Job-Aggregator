@@ -5,22 +5,38 @@ export default function Home() {
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
 
-  // Les mémoires pour stocker les offres et l'état des filtres
   const [offers, setOffers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [contractType, setContractType] = useState('');
   const [location, setLocation] = useState('');
+  
+  
+  const [analytics, setAnalytics] = useState(null);
 
-  // Vérification de la connexion au chargement
+  // Au chargement initial
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
     if (storedName) setUserName(storedName);
+    
+    fetchAnalytics();
   }, []);
 
-  // Connexion API
+  // recuperation des stats
+  const fetchAnalytics = async () => {
+    try {
+      const res = await fetch('http://localhost:4000/api/analytics');
+      const resData = await res.json();
+      if (res.ok && resData.status === 'success') {
+        setAnalytics(resData.data);
+      }
+    } catch (err) {
+      console.error("Impossible de récupérer les statistiques", err);
+    }
+  };
+
+  // La fonction pour récupérer les offres 
   const fetchOffers = async () => {
     try {
-
       let url = 'http://localhost:4000/api/offers?';
       if (searchQuery) url += `q=${searchQuery}&`;
       if (location) url += `location=${location}&`;
@@ -30,14 +46,13 @@ export default function Home() {
       const resData = await response.json();
 
       if (response.ok && resData.status === 'success') {
-        setOffers(resData.data); 
+        setOffers(resData.data);
       }
     } catch (err) {
       console.error("Impossible de récupérer les offres d'emploi", err);
     }
   };
 
-  
   useEffect(() => {
     fetchOffers();
   }, [contractType, location]); 
@@ -59,7 +74,7 @@ export default function Home() {
         <div className="nav-links">
           {userName ? (
             <>
-              <span className="text-green">Bonjour, {userName} !</span>
+              <span className="text-green">Bonjour, {userName} ! </span>
               <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>
                 Déconnexion
               </button>
@@ -73,12 +88,35 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Section Recherche */}
+      {/* Section recherche */}
       <main className="hero-section">
         <h1 className="hero-title">Trouvez votre prochain <span className="text-green">Job Tech</span></h1>
         <p className="hero-subtitle">Les meilleures offres, centralisées au même endroit.</p>
 
-        {/* Barre de recherche principale */}
+        {analytics && (
+          <div className="stats-container">
+            <div className="stat-card">
+              <div className="stat-icon">💼</div>
+              <p className="stat-value">{analytics.totalOffers}</p>
+              <p className="stat-label">Offres actives</p>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">🏠</div>
+              <p className="stat-value">{analytics.remoteRatio?.remote || 0}</p>
+              <p className="stat-label">En Télétravail</p>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">🔥</div>
+              <p className="stat-value">
+                {/* Analyse: nb de cdi  */}
+                {analytics.byContractType?.find(c => c.contract_type === 'CDI')?.count || 0}
+              </p>
+              <p className="stat-label">Postes en CDI</p>
+            </div>
+          </div>
+        )}
+
+        {/* Barre de recherche */}
         <div className="search-container">
           <input 
             type="text" 
@@ -111,6 +149,7 @@ export default function Home() {
           </select>
         </div>
 
+        {/* Section des offres d'emploi */}
         <section className="offers-section">
           <h2 className="offers-title">Offres d'emploi disponibles</h2>
           
@@ -136,13 +175,13 @@ export default function Home() {
               ))
             ) : (
               <div className="no-offers">
-                 Le marais est calme... Aucune offre ne correspond à vos critères pour le moment.
+                🐊 Le marais est calme... Aucune offre ne correspond à vos critères pour le moment.
               </div>
             )}
           </div>
         </section>
 
-        {/* Liens de développement */}
+        {/* Liens Admin */}
         <div className="debug-menu">
           <p className="text-green" style={{ margin: '0 0 0.5rem 0' }}>Menu :</p>
           <div>
