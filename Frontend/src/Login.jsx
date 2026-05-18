@@ -15,7 +15,7 @@ export default function Login() {
 
     try {
      
-      const response = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -23,9 +23,15 @@ export default function Login() {
       const data = await response.json();
 
       //si succes
+
       if (response.ok) {
+        // On sauvegarde le token + le nom
         localStorage.setItem('token', data.token); 
-        navigate('/'); 
+        localStorage.setItem('userName', data.user.name); 
+        
+        alert('Connexion réussie !');
+        navigate('/'); // Retour à l'accueil
+
       } else {
         setError(data.message || 'Email ou mot de passe incorrect.');
       }

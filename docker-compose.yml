@@ -10,7 +10,7 @@ services:
       - "3306:3306"
     volumes:
       - jobaggregator-db-data:/var/lib/mysql
-      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro,Z
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
       interval: 5s
