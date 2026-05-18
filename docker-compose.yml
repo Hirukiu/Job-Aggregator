@@ -4,8 +4,8 @@ services:
     image: mysql:8.4
     container_name: jobaggregator-mysql
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_DATABASE: job_aggregator
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-job_aggregator}
     ports:
       - "3306:3306"
     volumes:
@@ -20,7 +20,7 @@ services:
   backend:
     build: ./backend
     container_name: jobaggregator-backend
-    env_file: ./backend/.env
+    env_file: ./.env
     environment:
       DB_HOST: database
       DB_PORT: 3306
