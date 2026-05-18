@@ -74,7 +74,7 @@ export default function Home() {
         <div className="nav-links">
           {userName ? (
             <>
-              <span className="text-green">Bonjour, {userName} ! </span>
+              <Link to="/profile" className="text-green" style={{ textDecoration: 'none', fontWeight: 'bold' }}> Bonjour, {userName} ! </Link>
               <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>
                 Déconnexion
               </button>

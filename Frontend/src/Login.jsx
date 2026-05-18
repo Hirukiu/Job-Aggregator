@@ -25,9 +25,12 @@ export default function Login() {
       //si succes
 
       if (response.ok) {
-        // On sauvegarde le token + le nom
+        // On sauvegarde le token + le nom + l'email + le role
         localStorage.setItem('token', data.token); 
         localStorage.setItem('userName', data.user.name); 
+
+        localStorage.setItem('userEmail', data.user.email); 
+        localStorage.setItem('userRole', data.user.role);
         
         alert('Connexion réussie !');
         navigate('/'); // Retour à l'accueil
