@@ -79,7 +79,13 @@ export default function Home() {
       {/* Barre de navigation */}
       <nav className="navbar" aria-label="Navigation principale">
         <div className="nav-brand">
-          <span aria-hidden="true" style={{ marginRight: '0.5rem' }}>🐊</span> JobAlligator
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <img
+              src={Logo}
+              alt="JobAlligator Logo"
+              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
+            />JobAlligator
+          </Link>
         </div>
         <div className="nav-links">
           {userName ? (
