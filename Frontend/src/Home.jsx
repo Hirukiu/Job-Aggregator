@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from './assets/logo.png';
 
 export default function Home() {
   const [userName, setUserName] = useState('');
-  const [userRole, setUserRole] = useState(''); 
+  const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
 
   const [offers, setOffers] = useState([]);
@@ -14,11 +15,11 @@ export default function Home() {
 
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
-    const storedRole = localStorage.getItem('userRole'); 
-    
+    const storedRole = localStorage.getItem('userRole');
+
     if (storedName) setUserName(storedName);
     if (storedRole) setUserRole(storedRole);
-    
+
     fetchAnalytics();
   }, []);
 
@@ -54,10 +55,10 @@ export default function Home() {
 
   useEffect(() => {
     fetchOffers();
-  }, [contractType, location]); 
+  }, [contractType, location]);
 
   const handleLogout = () => {
-    localStorage.clear(); 
+    localStorage.clear();
     setUserName('');
     setUserRole('');
     navigate('/');
@@ -68,7 +69,13 @@ export default function Home() {
       {/* Barre de navigation */}
       <nav className="navbar" aria-label="Navigation principale">
         <div className="nav-brand">
-          <span aria-hidden="true" style={{ marginRight: '0.5rem' }}>🐊</span> JobAlligator
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <img
+              src={Logo}
+              alt="JobAlligator Logo"
+              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
+            />JobAlligator
+          </Link>
         </div>
         <div className="nav-links">
           {userName ? (
@@ -78,11 +85,11 @@ export default function Home() {
                   Espace Admin
                 </Link>
               )}
-              
+
               <Link to="/profile" className="text-green" style={{ textDecoration: 'none', fontWeight: 'bold' }}>
-                Bonjour, {userName} ! 
+                Bonjour, {userName} !
               </Link>
-              
+
               <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>
                 Déconnexion
               </button>
@@ -126,9 +133,9 @@ export default function Home() {
 
         {/* Barre de recherche */}
         <div className="search-container">
-          <input 
-            type="text" 
-            placeholder="Rechercher un poste (ex: Développeur React)..." 
+          <input
+            type="text"
+            placeholder="Rechercher un poste (ex: Développeur React)..."
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -161,7 +168,7 @@ export default function Home() {
         {/* Section des offres d'emploi */}
         <section className="offers-section" aria-label="Liste des offres d'emploi">
           <h2 className="offers-title">Offres d'emploi disponibles</h2>
-          
+
           <div className="offers-list">
             {offers.length > 0 ? (
               offers.map((job) => (
@@ -189,7 +196,7 @@ export default function Home() {
               ))
             ) : (
               <div className="no-offers" role="status">
-                 Le marais est calme... Aucune offre ne correspond à vos critères pour le moment.
+                Le marais est calme... Aucune offre ne correspond à vos critères pour le moment.
               </div>
             )}
           </div>

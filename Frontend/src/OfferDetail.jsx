@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import Logo from './assets/logo.png';
 
 export default function OfferDetail() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const [offer, setOffer] = useState(null);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function OfferDetail() {
       try {
         const res = await fetch(`http://localhost:4000/api/offers/${id}`);
         const data = await res.json();
-        
+
         if (res.ok && data.status === 'success') {
           setOffer(data.data);
         } else {
@@ -39,7 +40,7 @@ export default function OfferDetail() {
   if (!offer) {
     return (
       <div className="page-container loading-container" aria-live="polite">
-        Chargement des détails de l'offre... 
+        Chargement des détails de l'offre...
       </div>
     );
   }
@@ -48,20 +49,26 @@ export default function OfferDetail() {
     <div className="page-container offer-detail-page">
       {/* Navbar */}
       <nav className="navbar" aria-label="Navigation secondaire">
-        <Link to="/" className="nav-brand" style={{ textDecoration: 'none' }}>
-          <span aria-hidden="true" style={{ marginRight: '0.5rem' }}>🐊</span> JobAlligator
-        </Link>
+        <div className="nav-brand">
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <img
+              src={Logo}
+              alt="JobAlligator Logo"
+              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
+            />JobAlligator
+          </Link>
+        </div>
         <Link to="/" className="nav-link">Retour aux offres</Link>
       </nav>
 
       {/* Contenu de la fiche de poste */}
       <main className="offer-main">
         <div className="offer-card-detail">
-          
+
           <span className="badge-contract badge-contract-detail">
             {offer.contract_type}
           </span>
-          
+
           <h1 className="offer-title">{offer.title}</h1>
           <p className="offer-company">{offer.company} — {offer.location}</p>
 
@@ -77,12 +84,12 @@ export default function OfferDetail() {
             </span>
             {offer.remote === 1 && (
               <span className="badge-remote">
-                <span aria-hidden="true">🏠</span> Télétravail 
+                <span aria-hidden="true">🏠</span> Télétravail
               </span>
             )}
           </div>
 
-         {/* La description */}
+          {/* La description */}
           <h2 className="offer-description-title">Description du poste</h2>
           <div className="markdown-content">
             {offer.description ? (
@@ -97,17 +104,17 @@ export default function OfferDetail() {
               <p>Aucune description détaillée n'a été fournie pour ce poste.</p>
             )}
           </div>
-          
+
           {/* Bouton de redirection finale */}
-          <a 
-            href={offer.apply_url} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="btn-apply btn-apply-large" 
+          <a
+            href={offer.apply_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-apply btn-apply-large"
           >
-            Postuler directement sur {offer.source} 
+            Postuler directement sur {offer.source}
           </a>
-          
+
         </div>
       </main>
     </div>
