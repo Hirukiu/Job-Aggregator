@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from './assets/logo.png';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -44,7 +45,15 @@ export default function Register() {
       </Link>
 
       <div className="center-content">
-        <Link to="/" className="logo-emoji">🐊</Link>
+        <div className="nav-brand">
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <img
+              src={Logo}
+              alt="JobAlligator Logo"
+              style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
+            />JobAlligator
+          </Link>
+        </div>
         <h2 className="title">Rejoignez le marais !</h2>
         <p className="subtitle">Créez votre compte pour trouver les meilleurs jobs tech.</p>
 
@@ -54,9 +63,9 @@ export default function Register() {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="form-label">Nom complet</label>
-              <input 
-                type="text" 
-                required 
+              <input
+                type="text"
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="form-input"
@@ -66,9 +75,9 @@ export default function Register() {
 
             <div className="form-group">
               <label className="form-label">Adresse Email</label>
-              <input 
-                type="email" 
-                required 
+              <input
+                type="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"
@@ -78,9 +87,9 @@ export default function Register() {
 
             <div className="form-group">
               <label className="form-label">Mot de passe</label>
-              <input 
-                type="password" 
-                required 
+              <input
+                type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input"

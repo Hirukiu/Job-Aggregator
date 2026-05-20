@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from './assets/logo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-     
+
       const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,13 +27,12 @@ export default function Login() {
 
       if (response.ok) {
         // On sauvegarde le token + le nom + l'email + le role
-        localStorage.setItem('token', data.token); 
-        localStorage.setItem('userName', data.user.name); 
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userName', data.user.name);
 
-        localStorage.setItem('userEmail', data.user.email); 
+        localStorage.setItem('userEmail', data.user.email);
         localStorage.setItem('userRole', data.user.role);
-        
-        alert('Connexion réussie !');
+
         navigate('/'); // Retour à l'accueil
 
       } else {
@@ -55,7 +55,13 @@ export default function Login() {
       </Link>
 
       <div className="center-content">
-        <Link to="/" className="logo-emoji">🐊</Link>
+        <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+          <img
+            src={Logo}
+            alt="JobAlligator Logo"
+            style={{ height: '100px', width: 'auto', objectFit: 'contain' }}
+          />
+        </Link>
         <h2 className="title">Content de vous revoir !</h2>
         <p className="subtitle">Connectez-vous pour postuler aux offres.</p>
 
@@ -65,9 +71,9 @@ export default function Login() {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="form-label">Adresse Email</label>
-              <input 
-                type="email" 
-                required 
+              <input
+                type="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"
@@ -77,9 +83,9 @@ export default function Login() {
 
             <div className="form-group">
               <label className="form-label">Mot de passe</label>
-              <input 
-                type="password" 
-                required 
+              <input
+                type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input"

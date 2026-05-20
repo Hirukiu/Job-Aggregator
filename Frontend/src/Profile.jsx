@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from './assets/logo.png';
 
 export default function Profile() {
   const navigate = useNavigate();
-  
+
   const [user, setUser] = useState({
     name: '',
     email: '',
@@ -26,18 +27,24 @@ export default function Profile() {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.clear(); 
+    localStorage.clear();
     navigate('/');
   };
 
   return (
     <div className="page-container" style={{ backgroundColor: '#f9fafb' }}>
-      
+
       {/* Barre de navigation simple */}
       <nav className="navbar">
-        <Link to="/" className="nav-brand" style={{ textDecoration: 'none' }}>
-          <span style={{ marginRight: '0.5rem' }}>🐊</span> JobAlligator
-        </Link>
+        <div className="nav-brand">
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <img
+              src={Logo}
+              alt="JobAlligator Logo"
+              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
+            />JobAlligator
+          </Link>
+        </div>
         <Link to="/" className="nav-link">Retour aux offres</Link>
       </nav>
 
@@ -46,7 +53,7 @@ export default function Profile() {
           <span className="profile-avatar">👤</span>
           <h1 className="profile-name">{user.name}</h1>
           <p className="profile-email">{user.email}</p>
-          
+
           <span className={`profile-role-badge ${user.role === 'ADMIN' ? 'admin' : ''}`}>
             Rôle : {user.role}
           </span>

@@ -1,27 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from './assets/logo.png';
 
 export default function Home() {
   const [userName, setUserName] = useState('');
+  const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
 
   const [offers, setOffers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [contractType, setContractType] = useState('');
   const [location, setLocation] = useState('');
-  
-  
   const [analytics, setAnalytics] = useState(null);
 
-  // Au chargement initial
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
+    const storedRole = localStorage.getItem('userRole');
+
     if (storedName) setUserName(storedName);
-    
+    if (storedRole) setUserRole(storedRole);
+
     fetchAnalytics();
   }, []);
 
-  // recuperation des stats
+  // on recup les stats
   const fetchAnalytics = async () => {
     try {
       const res = await fetch('http://localhost:4000/api/analytics');
@@ -34,10 +36,10 @@ export default function Home() {
     }
   };
 
-  // La fonction pour récupérer les offres 
+  // Récup les offres
   const fetchOffers = async () => {
     try {
-      let url = 'http://localhost:4000/api/offers?';
+      let url = 'http://localhost:4000/api/offers?limit=200&';
       if (searchQuery) url += `q=${searchQuery}&`;
       if (location) url += `location=${location}&`;
       if (contractType) url += `contract_type=${contractType}&`;
@@ -55,12 +57,12 @@ export default function Home() {
 
   useEffect(() => {
     fetchOffers();
-  }, [contractType, location]); 
+  }, [contractType, location]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userName');
+    localStorage.clear();
     setUserName('');
+    setUserRole('');
     navigate('/');
   };
 
@@ -69,12 +71,27 @@ export default function Home() {
       {/* Barre de navigation */}
       <nav className="navbar">
         <div className="nav-brand">
-          <span style={{ marginRight: '0.5rem' }}>🐊</span> JobAlligator
+          <span style={{ marginRight: '0.5rem' }}><Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+            <img
+              src={Logo}
+              alt="JobAlligator Logo"
+              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
+            />
+          </Link></span> JobAlligator
         </div>
         <div className="nav-links">
           {userName ? (
             <>
-              <Link to="/profile" className="text-green" style={{ textDecoration: 'none', fontWeight: 'bold' }}> Bonjour, {userName} ! </Link>
+              {userRole === 'ADMIN' && (
+                <Link to="/admin" className="nav-link" style={{ fontWeight: 'bold', color: '#2563eb', marginRight: '0.5rem' }}>
+                  Espace Admin
+                </Link>
+              )}
+
+              <Link to="/profile" className="text-green" style={{ textDecoration: 'none', fontWeight: 'bold' }}>
+                Bonjour, {userName} !
+              </Link>
+
               <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>
                 Déconnexion
               </button>
@@ -88,11 +105,12 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Section recherche */}
+      {/* Section recherche*/}
       <main className="hero-section">
         <h1 className="hero-title">Trouvez votre prochain <span className="text-green">Job Tech</span></h1>
         <p className="hero-subtitle">Les meilleures offres, centralisées au même endroit.</p>
 
+        {/* Affichage des compteurs statistiques */}
         {analytics && (
           <div className="stats-container">
             <div className="stat-card">
@@ -108,7 +126,6 @@ export default function Home() {
             <div className="stat-card">
               <div className="stat-icon">🔥</div>
               <p className="stat-value">
-                {/* Analyse: nb de cdi  */}
                 {analytics.byContractType?.find(c => c.contract_type === 'CDI')?.count || 0}
               </p>
               <p className="stat-label">Postes en CDI</p>
@@ -118,9 +135,9 @@ export default function Home() {
 
         {/* Barre de recherche */}
         <div className="search-container">
-          <input 
-            type="text" 
-            placeholder="Rechercher un poste (ex: Développeur React)..." 
+          <input
+            type="text"
+            placeholder="Rechercher un poste (ex: Développeur WEB)..."
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -152,7 +169,7 @@ export default function Home() {
         {/* Section des offres d'emploi */}
         <section className="offers-section">
           <h2 className="offers-title">Offres d'emploi disponibles</h2>
-          
+
           <div className="offers-list">
             {offers.length > 0 ? (
               offers.map((job) => (
@@ -162,7 +179,7 @@ export default function Home() {
                     <p className="offer-company-row">{job.company} - {job.location}</p>
                     <div className="offer-meta-tags">
                       <span className="badge-contract">{job.contract_type}</span>
-                      {job.salary && <span className="tag-location"> {job.salary}</span>}
+                      {job.salary && <span className="tag-location">{job.salary}</span>}
                       <span className="tag-source">⚓ Via {job.source}</span>
                     </div>
                   </div>
@@ -180,14 +197,6 @@ export default function Home() {
             )}
           </div>
         </section>
-
-        {/* Liens Admin */}
-        <div className="debug-menu">
-          <p className="text-green" style={{ margin: '0 0 0.5rem 0' }}>Menu :</p>
-          <div>
-            <Link to="/admin" className="text-green" style={{ textDecoration: 'underline' }}>Espace Admin</Link>
-          </div>
-        </div>
       </main>
     </div>
   );
