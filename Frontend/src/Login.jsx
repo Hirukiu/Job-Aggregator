@@ -33,7 +33,7 @@ export default function Login() {
         localStorage.setItem('userEmail', data.user.email);
         localStorage.setItem('userRole', data.user.role);
 
-        navigate('/'); // Retour à l'accueil
+        navigate('/'); 
 
       } else {
         setError(data.message || 'Email ou mot de passe incorrect.');

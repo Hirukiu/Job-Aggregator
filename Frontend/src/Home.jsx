@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Logo from './assets/logo.png';
 
 export default function Home() {
   const [userName, setUserName] = useState('');
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState(''); 
   const navigate = useNavigate();
 
   const [offers, setOffers] = useState([]);
@@ -15,15 +14,14 @@ export default function Home() {
 
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
-    const storedRole = localStorage.getItem('userRole');
-
+    const storedRole = localStorage.getItem('userRole'); 
+    
     if (storedName) setUserName(storedName);
     if (storedRole) setUserRole(storedRole);
-
+    
     fetchAnalytics();
   }, []);
 
-  // on recup les stats
   const fetchAnalytics = async () => {
     try {
       const res = await fetch('http://localhost:4000/api/analytics');
@@ -36,7 +34,6 @@ export default function Home() {
     }
   };
 
-  // Récup les offres
   const fetchOffers = async () => {
     try {
       let url = 'http://localhost:4000/api/offers?limit=200&';
@@ -57,10 +54,10 @@ export default function Home() {
 
   useEffect(() => {
     fetchOffers();
-  }, [contractType, location]);
+  }, [contractType, location]); 
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.clear(); 
     setUserName('');
     setUserRole('');
     navigate('/');
@@ -69,15 +66,9 @@ export default function Home() {
   return (
     <div className="page-container">
       {/* Barre de navigation */}
-      <nav className="navbar">
+      <nav className="navbar" aria-label="Navigation principale">
         <div className="nav-brand">
-          <span style={{ marginRight: '0.5rem' }}><Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
-            <img
-              src={Logo}
-              alt="JobAlligator Logo"
-              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
-            />
-          </Link></span> JobAlligator
+          <span aria-hidden="true" style={{ marginRight: '0.5rem' }}>🐊</span> JobAlligator
         </div>
         <div className="nav-links">
           {userName ? (
@@ -87,11 +78,11 @@ export default function Home() {
                   Espace Admin
                 </Link>
               )}
-
+              
               <Link to="/profile" className="text-green" style={{ textDecoration: 'none', fontWeight: 'bold' }}>
-                Bonjour, {userName} !
+                Bonjour, {userName} ! 
               </Link>
-
+              
               <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>
                 Déconnexion
               </button>
@@ -105,26 +96,26 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Section recherche*/}
+      {/* Section Héro */}
       <main className="hero-section">
         <h1 className="hero-title">Trouvez votre prochain <span className="text-green">Job Tech</span></h1>
         <p className="hero-subtitle">Les meilleures offres, centralisées au même endroit.</p>
 
-        {/* Affichage des compteurs statistiques */}
+        {/* Compteurs Statistiques */}
         {analytics && (
-          <div className="stats-container">
+          <div className="stats-container" role="region" aria-label="Statistiques du marché">
             <div className="stat-card">
-              <div className="stat-icon">💼</div>
+              <div className="stat-icon" aria-hidden="true">💼</div>
               <p className="stat-value">{analytics.totalOffers}</p>
               <p className="stat-label">Offres actives</p>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">🏠</div>
+              <div className="stat-icon" aria-hidden="true">🏠</div>
               <p className="stat-value">{analytics.remoteRatio?.remote || 0}</p>
               <p className="stat-label">En Télétravail</p>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">🔥</div>
+              <div className="stat-icon" aria-hidden="true">🔥</div>
               <p className="stat-value">
                 {analytics.byContractType?.find(c => c.contract_type === 'CDI')?.count || 0}
               </p>
@@ -135,12 +126,13 @@ export default function Home() {
 
         {/* Barre de recherche */}
         <div className="search-container">
-          <input
-            type="text"
-            placeholder="Rechercher un poste (ex: Développeur WEB)..."
+          <input 
+            type="text" 
+            placeholder="Rechercher un poste (ex: Développeur React)..." 
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Rechercher un poste par mot-clé"
           />
           <button className="search-btn" onClick={fetchOffers}>
             Chercher
@@ -149,7 +141,7 @@ export default function Home() {
 
         {/* Barre de Filtres */}
         <div className="filters-container">
-          <select className="filter-select" value={contractType} onChange={(e) => setContractType(e.target.value)}>
+          <select className="filter-select" value={contractType} onChange={(e) => setContractType(e.target.value)} aria-label="Filtrer par type de contrat">
             <option value="">Type de contrat</option>
             <option value="CDI">CDI</option>
             <option value="CDD">CDD</option>
@@ -157,7 +149,7 @@ export default function Home() {
             <option value="Stage">Stage</option>
           </select>
 
-          <select className="filter-select" value={location} onChange={(e) => setLocation(e.target.value)}>
+          <select className="filter-select" value={location} onChange={(e) => setLocation(e.target.value)} aria-label="Filtrer par localisation">
             <option value="">Localisation</option>
             <option value="Paris">Paris</option>
             <option value="Lyon">Lyon</option>
@@ -167,32 +159,37 @@ export default function Home() {
         </div>
 
         {/* Section des offres d'emploi */}
-        <section className="offers-section">
+        <section className="offers-section" aria-label="Liste des offres d'emploi">
           <h2 className="offers-title">Offres d'emploi disponibles</h2>
-
+          
           <div className="offers-list">
             {offers.length > 0 ? (
               offers.map((job) => (
                 <div key={job.id} className="offer-card">
                   <div className="offer-info">
-                    <h3 className="offer-title-row">{job.title}</h3>
+
+                    <h3 className="offer-title-row">
+                      <Link to={`/offers/${job.id}`} className="offer-title-link" aria-label={`Voir le détail du poste de ${job.title} chez ${job.company}`}>
+                        {job.title}
+                      </Link>
+                    </h3>
                     <p className="offer-company-row">{job.company} - {job.location}</p>
                     <div className="offer-meta-tags">
                       <span className="badge-contract">{job.contract_type}</span>
-                      {job.salary && <span className="tag-location">{job.salary}</span>}
-                      <span className="tag-source">⚓ Via {job.source}</span>
+                      {job.salary && <span className="tag-location"><span aria-hidden="true"></span> {job.salary}</span>}
+                      <span className="tag-source"><span aria-hidden="true"></span> Via {job.source}</span>
                     </div>
                   </div>
                   <div>
-                    <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="btn-apply">
-                      Postuler
-                    </a>
+                    <Link to={`/offers/${job.id}`} className="btn-apply" style={{ textDecoration: 'none', display: 'inline-block' }}>
+                      Voir l'offre
+                    </Link>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="no-offers">
-                🐊 Le marais est calme... Aucune offre ne correspond à vos critères pour le moment.
+              <div className="no-offers" role="status">
+                 Le marais est calme... Aucune offre ne correspond à vos critères pour le moment.
               </div>
             )}
           </div>
