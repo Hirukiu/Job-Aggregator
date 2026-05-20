@@ -10,6 +10,7 @@ export default function AdminPage() {
 
   const [isImporting, setIsImporting] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success'); // 'success' | 'error'
   const [importPage, setImportPage] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +36,11 @@ export default function AdminPage() {
     }
   }, [activeTab, token, navigate]);
 
+  const showMessage = (text, type = 'success') => {
+    setMessage(text);
+    setMessageType(type);
+  };
+
   const fetchOffers = async () => {
     try {
       const res = await fetch('http://localhost:4000/api/admin/offers?limit=200', {
@@ -42,35 +48,43 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (res.ok) setOffers(data.data || []);
-      else setMessage(` Erreur: ${data.message}`);
+      else showMessage(`Erreur: ${data.message}`, 'error');
     } catch (err) {
-      setMessage(" Erreur de connexion au serveur.");
+      showMessage("Erreur de connexion au serveur.", 'error');
     }
   };
 
-  const toggleOfferStatus = async (id, currentStatus) => {
+  const toggleOfferStatus = async (id, currentStatus, title) => {
     try {
       const res = await fetch(`http://localhost:4000/api/admin/offers/${id}/status`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: !currentStatus })
       });
-      if (res.ok) fetchOffers();
-      else setMessage("Impossible de modifier le statut.");
+      if (res.ok) {
+        fetchOffers();
+        showMessage(`Offre "${title}" ${!currentStatus ? 'activée' : 'désactivée'}.`, 'success');
+      } else {
+        showMessage("Impossible de modifier le statut.", 'error');
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const deleteOffer = async (id) => {
-    if (!window.confirm("Sûr de vouloir supprimer cette offre définitivement ?")) return;
+  const deleteOffer = async (id, title) => {
+    if (!window.confirm(`Supprimer définitivement l'offre "${title}" ?`)) return;
     try {
       const res = await fetch(`http://localhost:4000/api/admin/offers/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) fetchOffers();
-      else setMessage("Impossible de supprimer l'offre.");
+      if (res.ok) {
+        fetchOffers();
+        showMessage(`Offre "${title}" supprimée.`, 'success');
+      } else {
+        showMessage("Impossible de supprimer l'offre.", 'error');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -88,7 +102,7 @@ export default function AdminPage() {
     }
   };
 
-  const toggleUserRole = async (id, currentRole) => {
+  const toggleUserRole = async (id, currentRole, name) => {
     const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
     try {
       const res = await fetch(`http://localhost:4000/api/admin/users/${id}/role`, {
@@ -96,20 +110,26 @@ export default function AdminPage() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole })
       });
-      if (res.ok) fetchUsers();
+      if (res.ok) {
+        fetchUsers();
+        showMessage(`Rôle de "${name}" changé en ${newRole}.`, 'success');
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const deleteUser = async (id) => {
-    if (!window.confirm("Bannir cet utilisateur du marais ?")) return;
+  const deleteUser = async (id, name) => {
+    if (!window.confirm(`Bannir "${name}" du marais ?`)) return;
     try {
       const res = await fetch(`http://localhost:4000/api/admin/users/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) fetchUsers();
+      if (res.ok) {
+        fetchUsers();
+        showMessage(`Utilisateur "${name}" supprimé.`, 'success');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -117,7 +137,7 @@ export default function AdminPage() {
 
   const handleImportWeLoveDevs = async () => {
     setIsImporting(true);
-    setMessage(`Aspiration de la page ${importPage}... `);
+    showMessage(`Aspiration de la page ${importPage}…`, 'success');
     try {
       const response = await fetch('http://localhost:4000/api/ingestion/welovedevs', {
         method: 'POST',
@@ -126,14 +146,14 @@ export default function AdminPage() {
       });
       const data = await response.json();
       if (response.status === 201) {
-        setMessage(`Succès ! ${data.data.imported} nouvelles offres importées (Page ${importPage}).`);
+        showMessage(`Succès ! ${data.data.imported} nouvelles offres importées (Page ${importPage}).`, 'success');
         setImportPage(prev => prev + 1);
         if (activeTab === 'offers') fetchOffers();
       } else {
-        setMessage(`Erreur ${response.status} : ${data.message}`);
+        showMessage(`Erreur ${response.status} : ${data.message}`, 'error');
       }
     } catch (err) {
-      setMessage("Impossible de contacter le backend.");
+      showMessage("Impossible de contacter le backend.", 'error');
     } finally {
       setIsImporting(false);
     }
@@ -144,46 +164,80 @@ export default function AdminPage() {
 
   return (
     <div className="page-container">
-      <nav className="admin-navbar">
+      <nav className="admin-navbar" aria-label="Navigation administration">
         <div className="admin-nav-brand">
-          <span><Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+          <Link to="/" aria-label="JobAlligator – retour au site" style={{ display: 'inline-block', marginBottom: '1rem' }}>
             <img
               src={Logo}
-              alt="JobAlligator Logo"
+              alt=""
               style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
             />
-          </Link></span> JobAlligator
-          <span className="admin-badge">ADMIN</span>
+          </Link>
+          {' '}JobAlligator
+          <span className="admin-badge" aria-label="Interface administration">ADMIN</span>
         </div>
         <Link to="/" className="admin-nav-link">Retour au site</Link>
       </nav>
 
-      <main className="admin-main">
+      <main id="main-content" className="admin-main">
         <div className="admin-header">
           <h1 className="admin-title">Panneau de contrôle</h1>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-
-            <button onClick={handleImportWeLoveDevs} disabled={isImporting} className="btn-add">
+            <button
+              type="button"
+              onClick={handleImportWeLoveDevs}
+              disabled={isImporting}
+              aria-busy={isImporting}
+              aria-label={isImporting ? 'Importation en cours, veuillez patienter' : `Importer les offres WeLoveDevs – page ${importPage}`}
+              className="btn-add"
+            >
               {isImporting ? 'Aspiration...' : `Importer plus d'offres (Page ${importPage})`}
             </button>
           </div>
         </div>
 
+        {/* Message de retour – role="alert" pour les erreurs, role="status" pour les succès */}
         {message && (
-          <div className={`admin-message-box ${message.includes('Erreur') ? 'error' : 'success'}`}>
+          <div
+            className={`admin-message-box ${messageType === 'error' ? 'error' : 'success'}`}
+            role={messageType === 'error' ? 'alert' : 'status'}
+            aria-live={messageType === 'error' ? 'assertive' : 'polite'}
+          >
             {message}
-            <button onClick={() => setMessage('')} className="btn-close-message">X</button>
+            <button
+              type="button"
+              onClick={() => setMessage('')}
+              className="btn-close-message"
+              aria-label="Fermer le message"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
           </div>
         )}
 
-        <div className="tabs-container">
+        {/* Onglets ARIA */}
+        <div
+          role="tablist"
+          aria-label="Sections d'administration"
+          className="tabs-container"
+        >
           <button
+            type="button"
+            role="tab"
+            id="tab-offers"
+            aria-selected={activeTab === 'offers'}
+            aria-controls="panel-offers"
             onClick={() => setActiveTab('offers')}
             className={`tab-btn ${activeTab === 'offers' ? 'active' : ''}`}
           >
             Gérer les Offres ({offers.length})
           </button>
           <button
+            type="button"
+            role="tab"
+            id="tab-users"
+            aria-selected={activeTab === 'users'}
+            aria-controls="panel-users"
             onClick={() => setActiveTab('users')}
             className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
           >
@@ -191,15 +245,21 @@ export default function AdminPage() {
           </button>
         </div>
 
+        {/* Panneau Offres */}
         {activeTab === 'offers' && (
-          <div className="table-wrapper">
-            <table className="admin-table">
+          <div
+            role="tabpanel"
+            id="panel-offers"
+            aria-labelledby="tab-offers"
+            className="table-wrapper"
+          >
+            <table className="admin-table" aria-label="Liste des offres">
               <thead>
                 <tr>
-                  <th>Titre</th>
-                  <th>Entreprise</th>
-                  <th>Statut</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th scope="col">Titre</th>
+                  <th scope="col">Entreprise</th>
+                  <th scope="col">Statut</th>
+                  <th scope="col" style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,51 +273,78 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td className="action-btns">
-                      <button onClick={() => toggleOfferStatus(o.id, o.is_active)} className="btn-edit">
+                      <button
+                        type="button"
+                        onClick={() => toggleOfferStatus(o.id, o.is_active, o.title)}
+                        className="btn-edit"
+                        aria-label={`${o.is_active ? 'Désactiver' : 'Activer'} l'offre "${o.title}"`}
+                      >
                         {o.is_active ? 'Désactiver' : 'Activer'}
                       </button>
-                      <button onClick={() => deleteOffer(o.id)} className="btn-delete">Supprimer</button>
+                      <button
+                        type="button"
+                        onClick={() => deleteOffer(o.id, o.title)}
+                        className="btn-delete"
+                        aria-label={`Supprimer l'offre "${o.title}"`}
+                      >
+                        Supprimer
+                      </button>
                     </td>
                   </tr>
-                )) : <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Aucune offre trouvée.</td></tr>}
+                )) : (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Aucune offre trouvée.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
 
             {offers.length > offersPerPage && (
-              <div className="pagination-container">
+              <nav aria-label="Pagination des offres" className="pagination-container">
                 <button
+                  type="button"
                   onClick={prevPage}
                   disabled={currentPage === 1}
                   className="pagination-btn"
+                  aria-label="Page précédente"
                 >
                   Précédent
                 </button>
 
-                <span className="pagination-text">
-                  Page {currentPage} sur {totalPages}
+                <span className="pagination-text" aria-live="polite" aria-atomic="true">
+                  <span className="sr-only">Page courante :</span>
+                  {' '}{currentPage} sur {totalPages}
                 </span>
 
                 <button
+                  type="button"
                   onClick={nextPage}
                   disabled={currentPage === totalPages}
                   className="pagination-btn"
+                  aria-label="Page suivante"
                 >
                   Suivant
                 </button>
-              </div>
+              </nav>
             )}
           </div>
         )}
 
+        {/* Panneau Utilisateurs */}
         {activeTab === 'users' && (
-          <div className="table-wrapper">
-            <table className="admin-table">
+          <div
+            role="tabpanel"
+            id="panel-users"
+            aria-labelledby="tab-users"
+            className="table-wrapper"
+          >
+            <table className="admin-table" aria-label="Liste des utilisateurs">
               <thead>
                 <tr>
-                  <th>Nom</th>
-                  <th>Email</th>
-                  <th>Rôle</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th scope="col">Nom</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Rôle</th>
+                  <th scope="col" style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -271,13 +358,29 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td className="action-btns">
-                      <button onClick={() => toggleUserRole(u.id, u.role)} className="btn-edit">
+                      <button
+                        type="button"
+                        onClick={() => toggleUserRole(u.id, u.role, u.name)}
+                        className="btn-edit"
+                        aria-label={`Changer le rôle de ${u.name} (actuellement ${u.role})`}
+                      >
                         Changer Rôle
                       </button>
-                      <button onClick={() => deleteUser(u.id)} className="btn-delete">Bannir</button>
+                      <button
+                        type="button"
+                        onClick={() => deleteUser(u.id, u.name)}
+                        className="btn-delete"
+                        aria-label={`Bannir l'utilisateur ${u.name}`}
+                      >
+                        Bannir
+                      </button>
                     </td>
                   </tr>
-                )) : <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Aucun utilisateur.</td></tr>}
+                )) : (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Aucun utilisateur.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

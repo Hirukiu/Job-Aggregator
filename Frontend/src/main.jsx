@@ -14,6 +14,7 @@ import OfferDetail from './OfferDetail.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
+      <a href="#main-content" className="skip-link">Aller au contenu principal</a>
       <Routes>
         
         <Route path="/" element={<Home />} />

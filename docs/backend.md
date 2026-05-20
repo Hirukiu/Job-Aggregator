@@ -35,7 +35,8 @@ backend/src/
 │   ├── offerIngestionService.js  # Pipeline : fetch → normalize → upsert
 │   └── welovedevsClient.js       # Client HTTP WeLoveDevs
 └── utils/
-    └── normalize.js              # Normalisation des données
+    ├── normalize.js              # Normalisation des données
+    └── classifier.js             # Classification NLP (TF-IDF + Logistic Regression)
 ```
 
 ---
@@ -257,6 +258,37 @@ Importe des offres depuis l'API WeLoveDevs vers la base de données.
 ```json
 { "status": "ok" }
 ```
+
+---
+
+## Classification NLP
+
+Chaque offre importée est automatiquement classifiée dans une catégorie métier par un modèle **TF-IDF + Logistic Regression** entraîné sur de vraies offres WeLoveDevs.
+
+### Fonctionnement
+
+1. Le modèle est entraîné dans `ml/train_classifier.ipynb` (Python / scikit-learn)
+2. Les poids sont exportés dans `ml/classifier.json`
+3. `classifier.js` charge ce fichier et implémente l'inférence directement en Node.js (sans dépendance ML)
+
+### Pipeline d'inférence
+
+```
+titre + description  →  tokenisation en n-grammes  →  TF-IDF  →  régression logistique  →  catégorie
+```
+
+### Catégories
+
+`Frontend`, `Backend`, `Fullstack`, `Data & AI`, `DevOps & Cloud`, `Mobile`, `Cybersécurité`, `Embedded & Hardware`, `Gestion de projet`, `Autre`
+
+### Caractéristiques du modèle
+
+| Propriété | Valeur |
+|-----------|--------|
+| Algorithme | TF-IDF (unigrammes + bigrammes) + Logistic Regression |
+| Taille sur disque | ~200 KB |
+| Temps d'inférence | < 1 ms par offre |
+| Données d'entraînement | 500 offres réelles WeLoveDevs |
 
 ---
 

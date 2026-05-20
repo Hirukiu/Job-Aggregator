@@ -15,7 +15,6 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-
       const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -23,18 +22,12 @@ export default function Login() {
       });
       const data = await response.json();
 
-      //si succes
-
       if (response.ok) {
-        // On sauvegarde le token + le nom + l'email + le role
         localStorage.setItem('token', data.token);
         localStorage.setItem('userName', data.user.name);
-
         localStorage.setItem('userEmail', data.user.email);
         localStorage.setItem('userRole', data.user.role);
-
-        navigate('/'); 
-
+        navigate('/');
       } else {
         setError(data.message || 'Email ou mot de passe incorrect.');
       }
@@ -48,52 +41,72 @@ export default function Login() {
   return (
     <div className="page-container">
       <Link to="/" className="back-button">
-        <svg className="back-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <svg
+          className="back-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+          focusable="false"
+        >
           <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
         </svg>
         Retour à l'accueil
       </Link>
 
-      <div className="center-content">
-        <Link to="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
+      <main id="main-content" className="center-content">
+        <Link to="/" aria-label="JobAlligator – retour à l'accueil" style={{ display: 'inline-block', marginBottom: '1rem' }}>
           <img
             src={Logo}
-            alt="JobAlligator Logo"
+            alt=""
             style={{ height: '100px', width: 'auto', objectFit: 'contain' }}
           />
         </Link>
-        <h2 className="title">Content de vous revoir !</h2>
+        <h1 className="title">Content de vous revoir !</h1>
         <p className="subtitle">Connectez-vous pour postuler aux offres.</p>
 
         <div className="form-card">
-          {error && <div className="error-box">{error}</div>}
+          {error && (
+            <div className="error-box" role="alert" aria-live="assertive">
+              {error}
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate aria-label="Formulaire de connexion">
             <div className="form-group">
-              <label className="form-label">Adresse Email</label>
+              <label htmlFor="login-email" className="form-label">Adresse Email</label>
               <input
+                id="login-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"
                 placeholder="leon@epitech.eu"
+                autoComplete="email"
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Mot de passe</label>
+              <label htmlFor="login-password" className="form-label">Mot de passe</label>
               <input
+                id="login-password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input"
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn-primary">
+            <button
+              type="submit"
+              disabled={isLoading}
+              aria-busy={isLoading}
+              className="btn-primary"
+            >
               {isLoading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
@@ -102,7 +115,7 @@ export default function Login() {
             Pas encore de compte ? <Link to="/register" className="text-green">S'inscrire</Link>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

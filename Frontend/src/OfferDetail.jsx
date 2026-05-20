@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 export default function OfferDetail() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const [offer, setOffer] = useState(null);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOfferDetail = async () => {
       try {
         const res = await fetch(`http://localhost:4000/api/offers/${id}`);
         const data = await res.json();
-        
+
         if (res.ok && data.status === 'success') {
           setOffer(data.data);
         } else {
@@ -27,6 +26,20 @@ export default function OfferDetail() {
     fetchOfferDetail();
   }, [id]);
 
+  // Mise à jour du titre de page pour les lecteurs d'écran (WCAG 2.4.2)
+  useEffect(() => {
+    if (offer) {
+      document.title = `${offer.title} – ${offer.company} | JobAlligator`;
+    } else if (error) {
+      document.title = 'Offre introuvable | JobAlligator';
+    } else {
+      document.title = 'Chargement… | JobAlligator';
+    }
+    return () => {
+      document.title = 'JobAlligator';
+    };
+  }, [offer, error]);
+
   if (error) {
     return (
       <div className="page-container message-container">
@@ -38,8 +51,8 @@ export default function OfferDetail() {
 
   if (!offer) {
     return (
-      <div className="page-container loading-container" aria-live="polite">
-        Chargement des détails de l'offre... 
+      <div className="page-container loading-container" aria-live="polite" aria-busy="true">
+        Chargement des détails de l'offre…
       </div>
     );
   }
@@ -55,13 +68,13 @@ export default function OfferDetail() {
       </nav>
 
       {/* Contenu de la fiche de poste */}
-      <main className="offer-main">
+      <main id="main-content" className="offer-main">
         <div className="offer-card-detail">
-          
+
           <span className="badge-contract badge-contract-detail">
             {offer.contract_type}
           </span>
-          
+
           <h1 className="offer-title">{offer.title}</h1>
           <p className="offer-company">{offer.company} — {offer.location}</p>
 
@@ -77,12 +90,12 @@ export default function OfferDetail() {
             </span>
             {offer.remote === 1 && (
               <span className="badge-remote">
-                <span aria-hidden="true">🏠</span> Télétravail 
+                <span aria-hidden="true">🏠</span> Télétravail
               </span>
             )}
           </div>
 
-         {/* La description */}
+          {/* La description */}
           <h2 className="offer-description-title">Description du poste</h2>
           <div className="markdown-content">
             {offer.description ? (
@@ -97,17 +110,19 @@ export default function OfferDetail() {
               <p>Aucune description détaillée n'a été fournie pour ce poste.</p>
             )}
           </div>
-          
+
           {/* Bouton de redirection finale */}
-          <a 
-            href={offer.apply_url} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="btn-apply btn-apply-large" 
+          <a
+            href={offer.apply_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-apply btn-apply-large"
+            aria-label={`Postuler directement sur ${offer.source} (s'ouvre dans un nouvel onglet)`}
           >
-            Postuler directement sur {offer.source} 
+            Postuler directement sur {offer.source}
+            <span className="sr-only"> (s'ouvre dans un nouvel onglet)</span>
           </a>
-          
+
         </div>
       </main>
     </div>

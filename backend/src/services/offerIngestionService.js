@@ -56,13 +56,15 @@ async function ingestWeLoveDevsOffers(options = {}) {
   // WeLoveDevs stores the offers in payload.values.
   const jobs = Array.isArray(payload.values) ? payload.values : [];
 
-  // Second step: normalize then classify each offer.
-  const normalizedOffers = jobs.map((job) => {
-    const offer = normalizeWeLoveDevsJob(job);
-    // AI classification: assign a domain category based on title + description.
-    offer.category = classifyOffer(offer.title, offer.description);
-    return offer;
-  });
+  // Second step: normalize then classify each offer (classifyOffer is async – NLP model).
+  const normalizedOffers = await Promise.all(
+    jobs.map(async (job) => {
+      const offer = normalizeWeLoveDevsJob(job);
+      // AI classification: semantic similarity via sentence embeddings.
+      offer.category = await classifyOffer(offer.title, offer.description);
+      return offer;
+    }),
+  );
 
   // We save offers one by one.
   for (const offer of normalizedOffers) {

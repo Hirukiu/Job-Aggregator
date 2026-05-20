@@ -1,11 +1,45 @@
-# Décisions d'Architecture
+# Décisions d'Architecture et de Produit
 
-Ce document regroupe les décisions techniques majeures prises durant le projet.
+Ce document regroupe les décisions majeures du projet (produit, architecture, data, IA, sécurité, CI).
 Chaque décision suit le format : **Pourquoi / Comment / Trade-off**.
+Les alternatives rejetées sont documentées explicitement.
 
 ---
 
-## Architecture
+## Produit : cibles, problèmes prioritaires, valeur attendue
+
+### Contexte
+
+WeLoveDevs (plateforme de recrutement tech, groupe Insitoo) nous a mandatés pour concevoir et développer leur interface de consultation d'offres d'emploi. L'objectif est de construire une expérience utilisateur moderne par-dessus leur API officielle (`epi-api.welovedevs.com`), en ajoutant des fonctionnalités absentes de leur plateforme actuelle.
+
+### Décision
+
+**Utilisateur cible** : développeur ou étudiant tech en recherche active d'emploi, de stage ou d'alternance, qui utilise déjà WeLoveDevs pour trouver des offres.
+
+**Pain points identifiés côté WeLoveDevs :**
+
+| Priorité | Problème | Source |
+|---|---|---|
+| 1 | L'API WeLoveDevs expose les données brutes mais il n'existe pas d'interface dédiée permettant de les explorer avec des filtres avancés | Brief partenariat WeLoveDevs |
+| 2 | Les offres ne sont pas catégorisées par domaine métier : Backend, DevOps, Data, etc. apparaissent mélangés sans moyen de filtrer | Exploration des données WeLoveDevs |
+| 3 | Pas d'outil d'administration pour modérer ou gérer les offres côté opérateur | Besoin exprimé dans le cahier des charges |
+
+**Valeur proposée :**
+
+> Une interface web construite sur l'API WeLoveDevs qui enrichit les données brutes avec une classification IA par domaine métier, expose des statistiques de marché en temps réel, et offre un espace d'administration pour la modération des offres et la gestion des utilisateurs.
+
+### Pourquoi
+
+- WeLoveDevs fournit des données réelles sur le marché tech français — construire par-dessus leur API garantit la pertinence des offres sans avoir à scraper ou négocier d'autres sources.
+- La classification IA répond directement au pain point n°2 en ajoutant une couche sémantique absente de l'API brute.
+
+### Trade-off
+
+La plateforme dépend entièrement de l'API WeLoveDevs : une indisponibilité de leur côté bloque les imports. Le rate limit (1 req/s/étudiant) impose un import manuel par lots plutôt qu'une synchronisation automatique.
+
+---
+
+## Architecture : stack technique et frontières de services
 
 ### Contexte
 
@@ -13,24 +47,44 @@ Choisir le stack technique du backend et de la base de données.
 
 ### Décision
 
-Backend : **Node.js avec Express.js 5**.
-Base de données : **MySQL 8** via le driver `mysql2/promise`.
+Backend : **Node.js avec Express.js**.
+
+Base de données : **MySQL** via le driver `mysql2/promise`.
+
+Frontend : **React + Vite + Tailwind CSS**.
+
+Déploiement : **Docker Compose** avec 3 services (frontend, backend, database).
 
 ### Pourquoi
 
-- Node.js est déja maîtrisé par le groupe, ce qui réduit le risque d'erreurs de débutant sur un projet court.
-- Express est minimaliste : il ne force aucune structure et permet d'organiser le code comme on le souhaite (controllers, services, middleware).
+- Node.js est déjà maîtrisé par le groupe, ce qui réduit le temps d'apprentissage sur un projet court.
+- Express est minimaliste : il permet d'organiser le code comme on le souhaite (controllers, services, middleware).
 - MySQL est une base relationnelle éprouvée. Les offres ont une structure stable (titre, entreprise, localisation, contrat) qui se prête bien à un schéma fixe avec contraintes d'intégrité.
+- React est le framework frontend le plus utilisé dans les offres WeLoveDevs elles-mêmes — cohérent avec la cible.
 
 ### Comment
 
 - Le pool de connexions est configuré dans `backend/src/config/db.js`.
 - Le schéma est déclaré dans `backend/sql/init.sql` et monté automatiquement au démarrage du conteneur MySQL.
 - Toutes les requêtes utilisent des paramètres `?` pour prévenir les injections SQL.
+- Le frontend est buildé en multi-stage Docker (node → nginx) pour produire des fichiers statiques servis par Nginx.
 
+### Alternative rejetée
+
+**NestJS** (framework Node.js structuré) a été envisagé à la place d'Express.
+Rejeté car : courbe d'apprentissage plus longue (décorateurs TypeScript, modules), et la structure imposée par NestJS apporte peu de valeur sur un projet de cette taille où l'équipe connaît déjà Express.
+
+**PostgreSQL** a été envisagé à la place de MySQL.
+Rejeté car : les deux bases sont équivalentes pour ce cas d'usage. MySQL est plus familier à l'équipe et l'image Docker officielle est bien documentée pour l'initialisation via scripts SQL montés en volume.
+
+### Trade-off
+
+Express sans framework structuré demande plus de discipline pour organiser le code (on a choisi controllers/services/middleware manuellement).
+
+# Documentation des choix (ADRs)
 ---
 
-## ADR-02 — Data : Intégration WeLoveDevs + gestion du rate limit
+## Data : Intégration WeLoveDevs + gestion du rate limit
 
 ### Contexte
 
@@ -69,17 +123,17 @@ L'import se fait par appel unique paginé (`page`, `size`) plutôt que par boucl
 
 ### Alternative rejetée
 
-Un **import automatique planifié** (cron toutes les heures) a été envisagé. Écarté car :
-- Risque de dépasser le rate limit si plusieurs étudiants de l'équipe partagent la même clé.
-- Complexité supplémentaire (gestion des erreurs de planification, relances) pour un bénéfice limité en démonstration.
+Un **import automatique planifié** a été envisagé. Écarté car :
+- Risque de dépasser le rate limit si plusieurs étudiants demande un import en même temps.
+
 
 ### Trade-off
 
-L'import manuel demande une action humaine. Les données ne sont pas mises à jour automatiquement. Acceptable pour un projet de démonstration ; une version production ajouterait un scheduler avec backoff exponentiel.
+L'import manuel demande une action humaine. Les données ne sont pas mises à jour automatiquement.
 
 ---
 
-## ADR-03 — IA : Classificateur par dictionnaire de mots-clés
+## IA : Classificateur NLP (TF-IDF + Logistic Regression)
 
 ### Contexte
 
@@ -87,7 +141,11 @@ Implémenter une feature IA qui assigne automatiquement une catégorie métier �
 
 ### Décision
 
-Classificateur **basé sur un dictionnaire de mots-clés** avec système de priorité, implémenté dans `backend/src/utils/classifier.js`.
+Modèle **TF-IDF + Logistic Regression** entraîné sur 500 vraies offres WeLoveDevs, exporté en JSON et exécuté nativement dans Node.js.
+
+- Entraînement : `ml/train_classifier.ipynb` (Python / scikit-learn)
+- Poids exportés : `ml/classifier.json` (~200 KB)
+- Inférence : `backend/src/utils/classifier.js` (aucune dépendance ML)
 
 ### Pourquoi
 
@@ -96,35 +154,39 @@ Le cahier des charges interdit les modèles API externes et impose :
 - Résultat en < 5 secondes par offre
 - Pas de fine-tuning au démarrage du conteneur
 
-Un classificateur par mots-clés répond à toutes ces contraintes :
-- **0 MB** supplémentaire (code pur, pas de fichier modèle)
-- **< 1 ms** par offre
-- **Aucune dépendance** externe
+Le modèle TF-IDF + LR respecte toutes ces contraintes :
+- **~200 KB** sur disque
+- **< 1 ms** par offre (inférence pure JavaScript)
+- **Entraîné sur de vraies données** WeLoveDevs — meilleure généralisation qu'un dictionnaire fixe
 
 ### Comment
 
-Le fichier `classifier.js` définit 9 catégories (Data & AI, Mobile, DevOps & Cloud, Cybersécurité, Frontend, Embedded, Backend, Fullstack, Gestion de projet) + une catégorie par défaut "Autre".
+**Entraînement (Python) :**
+1. Récupération de 500 offres via l'API WeLoveDevs
+2. Étiquetage automatique par mots-clés pour générer les labels
+3. Pipeline scikit-learn : `TfidfVectorizer(ngram_range=(1,2)) + LogisticRegression(class_weight="balanced")`
+4. Export des poids (vocabulaire, IDF, coefficients LR) en JSON
 
-Chaque catégorie a une liste de mots-clés et une priorité. L'algorithme :
-
-1. Concatène `titre + titre + titre + description` (le titre est pondéré 3×).
-2. Passe en minuscules.
-3. Parcourt les catégories par priorité décroissante.
-4. Retourne la première catégorie dont un mot-clé est trouvé dans le texte.
+**Inférence (Node.js) :**
+```
+titre + description  →  tokenisation n-grammes  →  TF-IDF  →  régression logistique  →  catégorie
+```
 
 La catégorie est stockée dans le champ `category` de chaque offre et utilisée pour le filtre et les analytics du dashboard.
 
 ### Alternative rejetée
 
-**Un modèle de classification NLP léger** (ex: `fasttext`, modèle `transformers` distillé) aurait offert une meilleure précision sur des intitulés ambigus. Écarté car :
-- Taille du modèle proche de la limite de 500 MB.
-- Temps de chargement au démarrage non garanti sous 5 secondes selon l'environnement.
-- Complexité d'intégration disproportionnée par rapport au gain de précision sur ce volume de données.
+**Un classificateur par dictionnaire de mots-clés** a été utilisé dans une version antérieure. Remplacé car :
+- Sensible aux variations de vocabulaire (synonymes, abréviations, fautes de frappe).
+- Nécessite une maintenance manuelle de la liste de mots-clés.
+- Précision limitée sur les intitulés ambigus (ex: "Tech Lead Full Stack Cybersécurité").
 
 ### Mesure du succès
 
-- Vérification manuelle sur un échantillon de 20 offres importées : taux de classification correcte attendu > 80 %.
-- Le champ `category` est exposé dans `/api/analytics` pour visualiser la répartition et détecter des anomalies (ex: 90 % "Autre" signalerait un problème de dictionnaire).
+- Accuracy 82 % sur le jeu de test (100 offres réelles).
+- Validation croisée 5-fold : 71 % ± 10 %.
+- Matrice de confusion disponible dans `ml/confusion_matrix.png`.
+- Le champ `category` est exposé dans `/api/analytics` pour détecter des anomalies (ex: 90 % "Autre" signalerait un problème de modèle).
 
 ---
 
@@ -157,6 +219,44 @@ Aucune clé ou mot de passe n'est codé en dur. Toutes les valeurs sensibles son
 - `DB_PASSWORD` — mot de passe MySQL
 
 Le fichier `.env` est listé dans `.gitignore` et n'est jamais commité.
+
+---
+
+## Dashboard : choix des widgets et décisions utilisateur supportées
+
+### Contexte
+
+Le sujet exige que le dashboard affiche au moins un output de la feature data et un output de la feature IA, visibles sans navigation supplémentaire. Il faut justifier pourquoi chaque widget existe et quelle décision utilisateur il supporte.
+
+### Décision
+
+Le dashboard (page d'accueil, `Frontend/src/Home.jsx`) affiche 3 compteurs statistiques en haut de page et les données proviennent du endpoint `GET /api/analytics` (`backend/src/controllers/analyticsController.js`).
+
+**Widgets implémentés et leur justification :**
+
+| Widget | Donnée affichée | Décision utilisateur supportée | ADR lié |
+|---|---|---|---|
+| Compteur "Offres actives" | `totalOffers` — nombre total d'offres actives | "Le marché est-il actif en ce moment ? Vaut-il la peine de chercher ?" | Feature Data |
+| Compteur "En Télétravail" | `remoteRatio.remote` — offres avec `remote = 1` | "Puis-je trouver un poste sans déménager ?" | Feature Data |
+| Compteur "Postes en CDI" | `byContractType` filtré sur CDI | "Y a-t-il des offres pour mon type de contrat ?" | Feature Data |
+| Filtre par catégorie métier | Champ `category` assigné par le classificateur | "Je veux voir uniquement les offres Backend/DevOps/etc." | Feature IA |
+
+**Les 3 compteurs sont visibles immédiatement** sans scroll ni navigation — ils s'affichent dans la section `.stats-container` au-dessus de la barre de recherche.
+
+### Pourquoi ces widgets et pas d'autres
+
+- **Nombre total** : indicateur de santé de la plateforme. Un chiffre à 0 signale un problème d'import avant même que l'utilisateur cherche.
+- **Télétravail** : critère numéro 1 pour les étudiants qui ne veulent pas (ou ne peuvent pas) se déplacer.
+- **CDI** : différencie la plateforme d'un simple agrégateur de stages — montre que des postes permanents sont disponibles.
+- **Catégorie IA** : c'est l'output visible de la feature IA. Sans ce filtre, la classification serait invisible pour l'utilisateur.
+
+### Comment
+
+Le frontend appelle `GET /api/analytics` au chargement de la page (`useEffect` initial dans `Home.jsx`). Les données sont stockées dans l'état React `analytics` et affichées conditionnellement si `analytics !== null`.
+
+### Trade-off
+
+Les 3 compteurs sont statiques (pas de graphiques interactifs). Des visualisations type camembert ou courbe de tendance (disponibles dans `analytics.byMonth`, `analytics.byCategory`) auraient rendu les données plus lisibles mais auraient nécessité une bibliothèque de charts (Chart.js, Recharts) et du temps d'intégration frontend. Acceptable pour la version actuelle — les données sont exposées par l'API et peuvent être visualisées dans une version suivante.
 
 ---
 

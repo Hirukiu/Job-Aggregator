@@ -1,118 +1,100 @@
 
-const CATEGORIES = [
-  {
-    name: 'Data & AI',
-    priority: 10,
-    keywords: [
-      'machine learning', 'deep learning', 'data scientist', 'data science',
-      'data engineer', 'data analyst', 'mlops', 'nlp', 'computer vision',
-      'tensorflow', 'pytorch', 'scikit', 'pandas', 'spark', 'hadoop',
-      'airflow', 'kafka', 'big data', 'business intelligence',
-      'tableau', 'power bi', 'looker', 'dbt', 'etl',
-      'modèle prédictif', 'intelligence artificielle',
-    ],
-  },
-  {
-    name: 'Mobile',
-    priority: 9,
-    keywords: [
-      'ios', 'android', 'react native', 'flutter', 'swift', 'kotlin',
-      'mobile developer', 'développeur mobile', 'xamarin', 'ionic',
-      'app store', 'play store', 'xcode',
-    ],
-  },
-  {
-    name: 'DevOps & Cloud',
-    priority: 8,
-    keywords: [
-      'devops', 'sre', 'site reliability', 'cloud engineer', 'platform engineer',
-      'infrastructure', 'kubernetes', 'k8s', 'docker', 'terraform', 'ansible',
-      'aws', 'gcp', 'azure', 'ci/cd', 'gitlab ci', 'github actions', 'jenkins',
-      'sysadmin', 'réseau', 'network',
-    ],
-  },
-  {
-    name: 'Cybersécurité',
-    priority: 7,
-    keywords: [
-      'cybersécurité', 'cybersecurity', 'sécurité informatique', 'pentest',
-      'penetration testing', 'soc analyst', 'siem', 'vulnerability', 'ethical hacking',
-      'red team', 'blue team', 'cryptography', 'firewall', 'sécurité applicative',
-    ],
-  },
-  {
-    name: 'Frontend',
-    priority: 6,
-    keywords: [
-      'frontend', 'front-end', 'front end', 'développeur front',
-      'react', 'vue', 'angular', 'svelte', 'next.js', 'nuxt',
-      'html', 'css', 'sass', 'webpack', 'vite', 'ui developer',
-      'intégrateur', 'intégration web',
-    ],
-  },
-  {
-    name: 'Embedded & Hardware',
-    priority: 5,
-    keywords: [
-      'embarqué', 'embedded', 'firmware', 'fpga', 'iot', 'arduino',
-      'raspberry', 'rtos', 'système temps réel', 'électronique', 'hardware',
-    ],
-  },
-  {
-    name: 'Backend',
-    priority: 4,
-    keywords: [
-      'backend', 'back-end', 'back end', 'développeur back',
-      'api rest', 'restful', 'microservices', 'node.js', 'express',
-      'django', 'fastapi', 'flask', 'spring', 'laravel', 'rails',
-      'nestjs', 'graphql', 'database', 'sql',
-    ],
-  },
-  {
-    name: 'Fullstack',
-    priority: 3,
-    keywords: [
-      'fullstack', 'full-stack', 'full stack', 'développeur fullstack',
-      'frontend et backend', 'front et back',
-    ],
-  },
-  {
-    name: 'Gestion de projet',
-    priority: 2,
-    keywords: [
-      'chef de projet', 'project manager', 'scrum master', 'product owner',
-      'product manager', 'agile coach', 'delivery manager',
-    ],
-  },
-  {
-    name: 'Autre',
-    priority: 1,
-    keywords: [],
-  },
-];
+// NLP classifier entraîné dans ml/train_classifier.ipynb.
 
-// trier les categories par leurs priorité
+const path = require('path');
+const fs   = require('fs');
 
-const SORTED_CATEGORIES = [...CATEGORIES].sort((a, b) => b.priority - a.priority);
+const MODEL_PATH = path.resolve(__dirname, '../../..', 'ml', 'classifier.json');
+
+// Singleton – modèle chargé une seule fois
+let _model = null;
+
+function getModel() {
+  if (_model) return _model;
+  const raw = fs.readFileSync(MODEL_PATH, 'utf8');
+  _model = JSON.parse(raw);
+  return _model;
+}
 
 /**
- * Classify a job offer into a domain category.
- * @param {string} title       - Offer title
- * @param {string} description - Offer description
- * @returns {string} Category name 
+ * Tokenise un texte.
  */
-function classifyOffer(title = '', description = '') {
-  // Title is weighted more heavily by repeating it.
-  const text = `${title} ${title} ${title} ${description}`.toLowerCase();
+function tokenize(text, ngramRange = [1, 2]) {
+  const tokens = text.toLowerCase().match(/\b\w[\w'-]*\b/g) || [];
+  const ngrams = [];
 
-  for (const category of SORTED_CATEGORIES) {
-    if (category.keywords.length === 0) continue;
-
-    const matched = category.keywords.some((kw) => text.includes(kw));
-    if (matched) return category.name;
+  for (let n = ngramRange[0]; n <= ngramRange[1]; n++) {
+    for (let i = 0; i <= tokens.length - n; i++) {
+      ngrams.push(tokens.slice(i, i + n).join(' '));
+    }
   }
 
-  return 'Autre';
+  return ngrams;
+}
+
+/**
+ * Repasse le modéle en JSON en un model utilisable.
+ */
+function tfidfVector(text, model) {
+  const { vocabulary, idf, ngram_range, sublinear_tf } = model;
+  const ngrams = tokenize(text, ngram_range);
+  const size = idf.length;
+  const tf = new Float64Array(size);
+
+  // Compte des occurrences de chaque n-gramme
+  for (const ng of ngrams) {
+    const idx = vocabulary[ng];
+    if (idx !== undefined) tf[idx]++;
+  }
+
+  // TF-IDF : tf * idf (avec log(tf)+1 si sublinear_tf)
+  const vec = new Float64Array(size);
+  for (let i = 0; i < size; i++) {
+    if (tf[i] === 0) continue;
+    const tfVal = sublinear_tf ? Math.log(tf[i]) + 1 : tf[i];
+    vec[i] = tfVal * idf[i];
+  }
+
+  // Normalisation L2
+  let norm = 0;
+  for (let i = 0; i < size; i++) norm += vec[i] * vec[i];
+  norm = Math.sqrt(norm);
+  if (norm > 0) for (let i = 0; i < size; i++) vec[i] /= norm;
+
+  return vec;
+}
+
+/**
+ * Classify a job offer into a domain category using the trained NLP model.
+ * @param {string} title
+ * @param {string} description
+ * @returns {string} Category name
+ */
+function classifyOffer(title = '', description = '') {
+  const model = getModel();
+
+  const cleanDesc = description.replace(/<[^>]+>/g, ' ').substring(0, 512);
+  const text      = `${title} ${title} ${cleanDesc}`.trim();
+
+  const vec = tfidfVector(text, model);
+
+  // Logistic regression : score = coef · vec + intercept → argmax
+  const { coef, intercept, classes } = model;
+  let bestClass = classes[0];
+  let bestScore = -Infinity;
+
+  for (let c = 0; c < classes.length; c++) {
+    let score = intercept[c];
+    for (let i = 0; i < vec.length; i++) {
+      if (vec[i] !== 0) score += coef[c][i] * vec[i];
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestClass = classes[c];
+    }
+  }
+
+  return bestClass;
 }
 
 module.exports = { classifyOffer };
