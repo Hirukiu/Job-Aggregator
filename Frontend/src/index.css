@@ -52,7 +52,7 @@ a {
 }
 
 .text-green {
-  color: #16a34a;
+  color: #15803d;
   font-weight: bold;
 }
 
@@ -206,7 +206,7 @@ a {
   left: 1.5rem;
   display: flex;
   align-items: center;
-  color: #6b7280;
+  color: #374151;
   font-size: 0.875rem;
   font-weight: 600;
   transition: color 0.2s;
