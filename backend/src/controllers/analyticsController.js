@@ -18,7 +18,7 @@ async function getAnalytics(req, res, next) {
 
       // 1. Total active offers.
       pool.query(
-        `SELECT COUNT(*) AS total FROM offers WHERE is_active = 1`
+        'SELECT COUNT(*) AS total FROM offers WHERE is_active = 1'
       ),
 
       // 2. Count per AI-assigned category.

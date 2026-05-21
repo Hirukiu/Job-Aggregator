@@ -1,3 +1,6 @@
+// Ensure JWT_SECRET is available both locally and in CI.
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'ci_secret';
+
 const request = require('supertest');
 const jwt     = require('jsonwebtoken');
 
