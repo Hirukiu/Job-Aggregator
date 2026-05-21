@@ -26,6 +26,8 @@ services:
       DB_PORT: 3306
     ports:
       - "4000:4000"
+    volumes:
+      - ./ml:/ml:ro
     depends_on:
       database:
         condition: service_healthy

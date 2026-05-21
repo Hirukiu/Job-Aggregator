@@ -144,6 +144,10 @@ export default function AdminPage() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ page: importPage, size: 20 })
       });
+      if (response.status === 429) {
+        showMessage('Trop de requêtes, attendez un moment avant de réessayer.', 'error');
+        return;
+      }
       const data = await response.json();
       if (response.status === 201) {
         showMessage(`Succès ! ${data.data.imported} nouvelles offres importées (Page ${importPage}).`, 'success');
