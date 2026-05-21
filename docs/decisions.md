@@ -230,18 +230,18 @@ Le sujet exige que le dashboard affiche au moins un output de la feature data et
 
 ### Décision
 
-Le dashboard (page d'accueil, `Frontend/src/Home.jsx`) affiche 3 compteurs statistiques en haut de page et les données proviennent du endpoint `GET /api/analytics` (`backend/src/controllers/analyticsController.js`).
+Le dashboard (page d'accueil, `Frontend/src/Home.jsx`) affiche 3 compteurs statistiques et un widget de catégories IA visibles sans navigation. Les données proviennent du endpoint `GET /api/analytics` (`backend/src/controllers/analyticsController.js`).
 
 **Widgets implémentés et leur justification :**
 
-| Widget | Donnée affichée | Décision utilisateur supportée | ADR lié |
+| Widget | Donnée affichée | Décision utilisateur supportée | Feature |
 |---|---|---|---|
-| Compteur "Offres actives" | `totalOffers` — nombre total d'offres actives | "Le marché est-il actif en ce moment ? Vaut-il la peine de chercher ?" | Feature Data |
-| Compteur "En Télétravail" | `remoteRatio.remote` — offres avec `remote = 1` | "Puis-je trouver un poste sans déménager ?" | Feature Data |
-| Compteur "Postes en CDI" | `byContractType` filtré sur CDI | "Y a-t-il des offres pour mon type de contrat ?" | Feature Data |
-| Filtre par catégorie métier | Champ `category` assigné par le classificateur | "Je veux voir uniquement les offres Backend/DevOps/etc." | Feature IA |
+| Compteur "Offres actives" | `totalOffers` — nombre total d'offres actives | "Le marché est-il actif en ce moment ? Vaut-il la peine de chercher ?" | Data |
+| Compteur "En Télétravail" | `remoteRatio.remote` — offres avec `remote = 1` | "Puis-je trouver un poste sans déménager ?" | Data |
+| Compteur "Postes en CDI" | `byContractType` filtré sur CDI | "Y a-t-il des offres pour mon type de contrat ?" | Data |
+| Widget "Offres par domaine" | `byCategory` — catégories assignées par le classifieur TF-IDF + LR | "Je veux voir uniquement les offres Backend/DevOps/etc." — filtre cliquable | IA |
 
-**Les 3 compteurs sont visibles immédiatement** sans scroll ni navigation — ils s'affichent dans la section `.stats-container` au-dessus de la barre de recherche.
+**Les 4 widgets sont visibles immédiatement** sans scroll ni navigation — les 3 compteurs s'affichent dans la section `.stats-container` et le widget catégories dans `.category-widget`, tous deux au-dessus de la barre de recherche.
 
 ### Pourquoi ces widgets et pas d'autres
 

@@ -34,9 +34,9 @@ Le marché du recrutement tech est saturé d'offres, mais l'expérience candidat
 
 ## 3. Proposition de valeur
 
-> **"L'agrégateur d'offres tech qui fait gagner du temps aux développeurs en extrayant l'essentiel grâce à l'IA, tout en offrant une vision claire du marché grâce à la Data."**
+> **"L'agrégateur d'offres tech qui fait gagner du temps aux développeurs grâce à la classification IA par domaine métier, et offre une vision claire du marché grâce à la Data."**
 
-Notre plateforme centralise les meilleures opportunités tech (via WeLoveDevs) et utilise l'Intelligence Artificielle pour extraire immédiatement les mots-clés et compétences requises de chaque description. De plus, notre tableau de bord Data permet aux utilisateurs d'analyser les tendances du marché pour les aider à faire de meilleurs choix de carrière.
+Notre plateforme centralise les meilleures opportunités tech (via WeLoveDevs) et utilise l'Intelligence Artificielle pour classifier automatiquement chaque offre par domaine métier (Frontend, Backend, DevOps, Cybersécurité, etc.) dès l'import. L'utilisateur peut filtrer les offres par domaine en un clic, sans avoir à lire chaque intitulé. Notre tableau de bord Data permet en parallèle d'analyser les tendances du marché (répartition par contrat, télétravail, top entreprises) pour faire de meilleurs choix de carrière.
 
 ---
 

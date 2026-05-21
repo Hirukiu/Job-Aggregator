@@ -76,61 +76,71 @@ Un étudiant en cybersécurité ne veut pas voir des offres de chef de projet ou
 
 ### Approche retenue
 
-Classificateur **basé sur un dictionnaire de mots-clés avec système de priorité**, implémenté dans `backend/src/utils/classifier.js`.
+Classificateur **TF-IDF + Logistic Regression** entraîné sur 500 vraies offres WeLoveDevs, exporté en JSON et exécuté nativement dans Node.js.
+
+- Entraînement : `ml/train_classifier.ipynb` (Python / scikit-learn)
+- Poids exportés : `ml/classifier.json` (~200 KB)
+- Inférence : `backend/src/utils/classifier.js` (aucune dépendance ML externe)
 
 **Fonctionnement :**
-1. Concatène le titre de l'offre (pondéré ×3) et la description.
-2. Passe le texte en minuscules.
-3. Parcourt 9 catégories triées par priorité décroissante.
-4. Retourne la première catégorie dont un mot-clé est trouvé dans le texte.
-5. Fallback : catégorie "Autre" si aucun mot-clé ne correspond.
+1. Concatène le titre et la description de l'offre.
+2. Tokenise le texte en unigrammes et bigrammes.
+3. Calcule le vecteur TF-IDF normalisé (L2).
+4. Applique la régression logistique : produit scalaire du vecteur avec les coefficients de chaque classe.
+5. Retourne la classe avec le score le plus élevé.
+6. Fallback : catégorie "Autre" si tous les scores sont inférieurs au seuil.
 
-**9 catégories couvertes :**
-Data & AI, Mobile, DevOps & Cloud, Cybersécurité, Frontend, Embedded & Hardware, Backend, Fullstack, Gestion de projet.
+**10 catégories couvertes :**
+Autre, Backend, Cybersécurité, Data & AI, DevOps & Cloud, Embedded & Hardware, Frontend, Fullstack, Gestion de projet, Mobile.
 
 **Exemple de classification :**
 
-| Titre de l'offre | Mots-clés déclencheurs | Catégorie assignée |
-|---|---|---|
-| "Développeur React.js - CDI Paris" | `react` | Frontend |
-| "Ingénieur DevOps AWS" | `devops`, `aws` | DevOps & Cloud |
-| "Data Scientist - Machine Learning" | `data scientist`, `machine learning` | Data & AI |
-| "Pentesteur / Ethical Hacker" | `pentest`, `ethical hacking` | Cybersécurité |
+| Titre de l'offre | Catégorie assignée |
+|---|---|
+| "Développeur React.js - CDI Paris" | Frontend |
+| "Ingénieur DevOps AWS" | DevOps & Cloud |
+| "Data Scientist - Machine Learning" | Data & AI |
+| "Pentesteur / Ethical Hacker" | Cybersécurité |
 
 ### Contraintes techniques respectées
 
 | Contrainte (cahier des charges) | Valeur réelle |
 |---|---|
-| Taille sur disque < 500 MB | **0 MB** supplémentaire (code pur, pas de fichier modèle) |
-| Résultat en < 5 secondes par offre | **< 1 ms** par offre (pure manipulation de chaîne) |
-| Pas de fine-tuning au démarrage | **Non applicable** (aucun modèle à charger) |
+| Taille sur disque < 500 MB | **~200 KB** (`ml/classifier.json`) |
+| Résultat en < 5 secondes par offre | **< 1 ms** par offre (inférence pure JavaScript) |
+| Pas de fine-tuning au démarrage | **Aucun entraînement** — modèle chargé une fois en mémoire |
 | Pas d'API externe | **Aucune dépendance réseau** |
 
 ### Pourquoi cette approche est pertinente
 
-- **Déterministe** : le même intitulé produit toujours la même catégorie — pas de variance aléatoire.
-- **Transparent et maintenable** : ajouter une catégorie ou un mot-clé ne demande que d'éditer un tableau dans `classifier.js`.
-- **Adapté au domaine** : les mots-clés sont spécifiques au secteur tech, ce qui réduit les faux positifs.
-- **Pondération du titre** : le titre est répété 3× dans le texte analysé car il porte plus de signal sémantique que la description.
+- **Entraîné sur de vraies données** : 500 offres WeLoveDevs réelles — meilleure généralisation qu'un dictionnaire fixe de mots-clés.
+- **Robuste aux variations** : gère les synonymes, abréviations et intitulés ambigus grâce aux bigrammes TF-IDF.
+- **Aucune dépendance runtime** : l'inférence est 100 % JavaScript, aucune bibliothèque ML à installer dans le conteneur.
+- **Output visible dans le dashboard** : les catégories alimentent le widget "Offres par domaine" sur la page d'accueil (`Home.jsx`), permettant un filtre cliquable par domaine.
 
 ### Alternative rejetée
 
-**Modèle NLP léger** (`fasttext` pré-entraîné sur des données tech) aurait offert une meilleure précision sur des intitulés ambigus (ex: "Développeur" sans spécialité).
-Rejeté car :
-- Taille du modèle (~200-300 MB) proche de la limite autorisée.
-- Temps de chargement au démarrage du conteneur non garanti < 5 secondes sur tous les environnements.
-- Complexité d'intégration (installation de binaires, wrapper Node.js) disproportionnée par rapport au gain de précision sur ce volume de données.
+**Classificateur par dictionnaire de mots-clés** a été implémenté dans une version antérieure.
+Remplacé car :
+- Sensible aux variations de vocabulaire (synonymes, abréviations, fautes de frappe).
+- Nécessite une maintenance manuelle de la liste de mots-clés à chaque nouveau domaine.
+- Précision limitée sur les intitulés ambigus (ex: "Tech Lead Full Stack Cybersécurité").
+- Accuracy mesurée : ~60 % contre 82 % pour TF-IDF + LR sur le même jeu de test.
 
 ### Mesure du succès
 
-| Indicateur | Cible | Comment vérifier |
+| Indicateur | Cible | Résultat observé |
 |---|---|---|
-| Taux de classification correcte | > 80 % | Vérification manuelle sur 20 offres importées : comparer `category` en base avec la catégorie attendue au vu de l'intitulé |
-| Taux de "Autre" | < 20 % | `SELECT category, COUNT(*) FROM offers GROUP BY category` — si "Autre" dépasse 20 %, le dictionnaire est insuffisant |
-| Temps de traitement par offre | < 5 ms | Mesurable dans les logs d'ingestion |
-| Présence de `category` dans les analytics | Toutes les imports doivent avoir un `category` non null | Vérifié par `SELECT COUNT(*) FROM offers WHERE category IS NULL` |
+| Accuracy sur jeu de test (100 offres) | > 80 % | **82 %** |
+| Validation croisée 5-fold | > 65 % | **71 % ± 10 %** |
+| Taux de "Autre" après import | < 20 % | Vérifiable via `GET /api/analytics` (`byCategory`) |
+| Temps de traitement par offre | < 5 ms | **< 1 ms** |
+| Présence de `category` non null | 100 % des offres | Vérifié par `SELECT COUNT(*) FROM offers WHERE category IS NULL` |
+
+La matrice de confusion est disponible dans `ml/confusion_matrix.png`.
 
 ### Résultat observé
 
-Après import de 50 offres depuis WeLoveDevs, le endpoint `GET /api/analytics` retourne la répartition réelle par catégorie dans le champ `byCategory`.
-La distribution observée est cohérente avec le marché tech français (majorité Backend/Fullstack, présence significative de DevOps et Frontend).
+Après import depuis WeLoveDevs, le endpoint `GET /api/analytics` retourne la répartition réelle par catégorie dans le champ `byCategory`.
+La distribution est cohérente avec le marché tech français (majorité Backend/Fullstack, présence significative de DevOps et Frontend).
+Le widget "Offres par domaine" sur la page d'accueil affiche ces catégories comme filtres cliquables, rendant l'output IA directement visible sans navigation supplémentaire.
