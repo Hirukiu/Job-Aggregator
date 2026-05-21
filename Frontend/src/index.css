@@ -635,6 +635,82 @@ a {
   margin-top: 0.25rem;
 }
 
+/* Widget IA - Offres par domaine */
+.category-widget {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.category-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category-widget-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.category-widget-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.category-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.category-pill:hover {
+  border-color: #15803d;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.category-pill.active {
+  border-color: #15803d;
+  background: #15803d;
+  color: white;
+}
+
+.category-pill-count {
+  font-size: 0.75rem;
+  font-weight: 800;
+  opacity: 0.75;
+}
+
 
 
 .profile-container {

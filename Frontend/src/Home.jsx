@@ -13,6 +13,7 @@ export default function Home() {
   const [contractType, setContractType] = useState('');
   const [location, setLocation] = useState('');
   const [analytics, setAnalytics] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
@@ -43,6 +44,7 @@ export default function Home() {
       if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
       if (location) url += `location=${encodeURIComponent(location)}&`;
       if (contractType) url += `contract_type=${encodeURIComponent(contractType)}&`;
+      if (selectedCategory) url += `category=${encodeURIComponent(selectedCategory)}&`;
 
       const response = await fetch(url);
       const resData = await response.json();
@@ -59,7 +61,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchOffers();
-  }, [contractType, location]);
+  }, [contractType, location, selectedCategory]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -143,6 +145,41 @@ export default function Home() {
                 {analytics.byContractType?.find(c => c.contract_type === 'CDI')?.count || 0}
               </p>
               <p className="stat-label">Postes en CDI</p>
+            </div>
+          </div>
+        )}
+
+        {/* Widget IA - Catégories */}
+        {analytics?.byCategory?.length > 0 && (
+          <div className="category-widget" role="region" aria-label="Offres par domaine, classifiées par IA">
+            <div className="category-widget-header">
+              <h2 className="category-widget-title">Offres par domaine</h2>
+              <span className="category-widget-badge">Classifié par IA</span>
+            </div>
+            <div className="category-pills" role="group" aria-label="Filtrer par domaine">
+              <button
+                className={`category-pill${selectedCategory === '' ? ' active' : ''}`}
+                onClick={() => setSelectedCategory('')}
+                aria-pressed={selectedCategory === ''}
+              >
+                Tous
+                <span className="category-pill-count">({analytics.totalOffers})</span>
+              </button>
+              {analytics.byCategory
+                .filter(c => c.category && c.category !== 'Autre')
+                .sort((a, b) => b.count - a.count)
+                .map(c => (
+                  <button
+                    key={c.category}
+                    className={`category-pill${selectedCategory === c.category ? ' active' : ''}`}
+                    onClick={() => setSelectedCategory(prev => prev === c.category ? '' : c.category)}
+                    aria-pressed={selectedCategory === c.category}
+                  >
+                    {c.category}
+                    <span className="category-pill-count">({c.count})</span>
+                  </button>
+                ))
+              }
             </div>
           </div>
         )}
